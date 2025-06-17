@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.0.2/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
     <style>
         :root {
             --primary: #1a56db;
@@ -546,18 +546,21 @@
             height: 300px !important;
         }
 
+        /* Opcional: remover ou ajustar estilos para .mermaid se não for mais usado */
+        /*
         .mermaid {
-            width: 100%; /* Ensure mermaid container takes full width */
-            overflow: auto; /* Add scroll if content overflows */
-            display: flex; /* Use flexbox to center content */
-            justify-content: center; /* Center horizontally */
-            align-items: center; /* Center vertically */
-            min-height: 300px; /* Ensure it has a minimum height */
+            width: 100%;
+            overflow: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 300px;
         }
         .mermaid svg {
             max-width: 100%;
             height: auto;
         }
+        */
     </style>
 </head>
 
@@ -684,21 +687,10 @@
                     <p>Sinergia Coletiva</p>
                     <p>Quando ferramentas, ideias e profissionais se unem no ecossistema Foton, criamos um "todo" maior que a soma das partes: uma comunidade forte, profissionais capacitados e uma indústria mais inovadora.</p>
                 </div>
-
                 <div class="ecosystem-image">
-                    <div class="mermaid" id="mermaid-diagram">
-                        graph LR
-                            A[Foton] --> B(Gestão)
-                            A --> C(Automação)
-                            A --> D(Dados)
-                            A --> E(Educação)
-                            B --> B1(Redmine)
-                            C --> C1(n8n)
-                            D --> D1(PostgreSQL)
-                            E --> E1(Cursos)
-                    </div>
+                    <svg id="d3-diagram" width="100%" height="400"></svg>
                 </div>
-            </div>
+                
         </div>
     </section>
 
@@ -908,24 +900,137 @@
                 });
             }
 
-            // Mermaid - Inicialização
-            // Força a renderização do Mermaid após o DOM estar pronto
-            // It's better to explicitly render specific mermaid divs rather than rely on auto-init and a setTimeout.
-            const mermaidDiv = document.getElementById('mermaid-diagram');
-            if (mermaidDiv) {
-                // Remove the initial 'mermaid' class to prevent auto-initialization from conflicting
-                mermaidDiv.classList.remove('mermaid');
-                mermaid.initialize({
-                    startOnLoad: false, // Set to false since we are manually initializing
-                    theme: 'default',
-                    securityLevel: 'loose',
-                    fontFamily: "'Montserrat', sans-serif"
-                });
-                mermaid.render('diagram1', mermaidDiv.textContent).then(function(result) {
-                    mermaidDiv.innerHTML = result.svg;
+            // D3.js - Diagrama de Fluxo
+            const svg = d3.select("#d3-diagram");
+            // Certifique-se de que o SVG tenha um tamanho definido para que getBoundingClientRect retorne valores válidos
+            // Isso já está no HTML, mas é bom garantir que o CSS também não o restrinja de forma invisível.
+            const width = svg.node().getBoundingClientRect().width;
+            const height = svg.node().getBoundingClientRect().height;
+
+            // Definir os dados para o seu gráfico
+            // 'id' é único para cada nó
+            // 'text' é o que será exibido no nó
+            // 'group' pode ser usado para colorir ou agrupar visualmente (opcional)
+            const nodesData = [
+                { id: "A", text: "Foton", group: "main" },
+                { id: "B", text: "Gestão", group: "category" },
+                { id: "C", text: "Automação", group: "category" },
+                { id: "D", text: "Dados", group: "category" },
+                { id: "E", text: "Educação", group: "category" },
+                { id: "B1", text: "Redmine", group: "tool" },
+                { id: "C1", text: "n8n", group: "tool" },
+                { id: "D1", text: "PostgreSQL", group: "tool" },
+                { id: "E1", text: "Cursos", group: "tool" }
+            ];
+
+            // As arestas (links) conectam os nós
+            // 'source' e 'target' devem corresponder aos 'id' dos nós
+            const linksData = [
+                { source: "A", target: "B" },
+                { source: "A", target: "C" },
+                { source: "A", target: "D" },
+                { source: "A", target: "E" },
+                { source: "B", target: "B1" },
+                { source: "C", target: "C1" },
+                { source: "D", target: "D1" },
+                { source: "E", target: "E1" }
+            ];
+
+            // Escala de cores para os grupos (opcional)
+            const colorScale = d3.scaleOrdinal()
+                .domain(["main", "category", "tool"])
+                .range(["var(--primary)", "var(--accent)", "var(--secondary)"]); // Usando suas variáveis CSS
+
+            // Criar a simulação de força
+            const simulation = d3.forceSimulation(nodesData)
+                .force("link", d3.forceLink(linksData).id(d => d.id).distance(100)) // Distância entre os nós conectados
+                .force("charge", d3.forceManyBody().strength(-300)) // Força de repulsão entre os nós
+                .force("center", d3.forceCenter(width / 2, height / 2)) // Centraliza o grafo
+                .on("tick", ticked); // Função que é chamada a cada tick da simulação
+
+            // Adicionar as arestas (links) ao SVG
+            const link = svg.append("g")
+                .attr("stroke", "var(--gray)")
+                .attr("stroke-opacity", 0.6)
+                .selectAll()
+                .data(linksData)
+                .join("line");
+
+            // Adicionar os nós (com texto e círculo/retângulo) ao SVG
+            const node = svg.append("g")
+                .selectAll()
+                .data(nodesData)
+                .join("g")
+                .call(drag(simulation)); // Habilita arrastar os nós
+
+            // Adiciona um retângulo para o fundo do texto (melhora a legibilidade)
+            node.append("rect")
+                .attr("rx", 5) // Raio da borda para nós arredondados
+                .attr("ry", 5)
+                .attr("fill", d => colorScale(d.group))
+                .attr("stroke", d => d3.color(colorScale(d.group)).darker(0.7))
+                .attr("stroke-width", 2);
+
+            // Adiciona o texto ao nó
+            node.append("text")
+                .text(d => d.text)
+                .attr("font-size", "14px")
+                .attr("font-family", "Montserrat, sans-serif")
+                .attr("fill", "white")
+                .attr("text-anchor", "middle")
+                .attr("alignment-baseline", "middle")
+                .attr("dx", 0) // Ajuste horizontal do texto
+                .attr("dy", 0); // Ajuste vertical do texto
+
+            // Função de "tick" para atualizar as posições dos nós e links
+            function ticked() {
+                link
+                    .attr("x1", d => d.source.x)
+                    .attr("y1", d => d.source.y)
+                    .attr("x2", d => d.target.x)
+                    .attr("y2", d => d.target.y);
+
+                node.attr("transform", d => `translate(${d.x},${d.y})`);
+
+                // Ajusta o tamanho do retângulo ao texto
+                node.each(function(d) {
+                    const textElement = d3.select(this).select("text").node();
+                    const bbox = textElement.getBBox();
+                    const padding = 10;
+                    d3.select(this).select("rect")
+                        .attr("width", bbox.width + 2 * padding)
+                        .attr("height", bbox.height + 2 * padding)
+                        .attr("x", bbox.x - padding)
+                        .attr("y", bbox.y - padding);
                 });
             }
-        });
+
+            // Função para arrastar os nós
+            function drag(simulation) {
+                function dragstarted(event, d) {
+                    if (!event.active) simulation.alphaTarget(0.3).restart();
+                    d.fx = d.x;
+                    d.fy = d.y;
+                }
+
+                function dragged(event, d) {
+                    d.fx = event.x;
+                    d.fy = event.y;
+                }
+
+                function dragended(event, d) {
+                    if (!event.active) simulation.alphaTarget(0);
+                    d.fx = null;
+                    d.fy = null;
+                }
+
+                return d3.drag()
+                    .on("start", dragstarted)
+                    .on("drag", dragged)
+                    .on("end", dragended);
+            }
+
+
 
         // Scroll suave
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
