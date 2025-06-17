@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
     <style>
         :root {
             --primary: #1a56db;
@@ -272,11 +271,32 @@
             border-radius: 8px;
             padding: 2rem;
             box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-            min-height: 400px;
+            /* Definimos uma altura fixa para o contêiner */
+            height: 450px; /* Ajuste este valor conforme necessário */
+            min-height: unset; /* Remove o min-height anterior para evitar conflito */
             display: flex;
-            align-items: center;
-            justify-content: center;
+            flex-direction: column; /* Garante que os itens (texto e canvas) se empilhem verticalmente */
+            align-items: center; /* Centraliza horizontalmente o conteúdo */
+            justify-content: center; /* Centraliza verticalmente o conteúdo */
         }
+
+        /* Estilo para o texto acima do gráfico */
+        .chart-title-description {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--primary-dark);
+            margin-bottom: 1rem; /* Espaço entre o texto e o gráfico */
+            text-align: center; /* Centraliza o texto */
+        }
+
+        /* Specific style for the canvas within ecosystem-image */
+        .ecosystem-image #flowChart {
+            flex-grow: 1; /* Permite que o canvas cresça para preencher o espaço restante vertical */
+            width: 100%; /* Garante que o canvas ocupe a largura total */
+            /* Se for necessário, adicione height: 100% aqui também */
+            height: 100%;
+        }
+
 
         /* Contribute Section */
         .contribute {
@@ -545,22 +565,6 @@
             width: 100% !important;
             height: 300px !important;
         }
-
-        /* Opcional: remover ou ajustar estilos para .mermaid se não for mais usado */
-        /*
-        .mermaid {
-            width: 100%;
-            overflow: auto;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 300px;
-        }
-        .mermaid svg {
-            max-width: 100%;
-            height: auto;
-        }
-        */
     </style>
 </head>
 
@@ -688,9 +692,9 @@
                     <p>Quando ferramentas, ideias e profissionais se unem no ecossistema Foton, criamos um "todo" maior que a soma das partes: uma comunidade forte, profissionais capacitados e uma indústria mais inovadora.</p>
                 </div>
                 <div class="ecosystem-image">
-                    <svg id="d3-diagram" width="100%" height="400"></svg>
-                </div>
-                
+                    <p class="chart-title-description">Nível de Desenvolvimento: Inicial</p>
+                    <canvas id="flowChart" width="100%"></canvas> </div>
+            </div>
         </div>
     </section>
 
@@ -855,9 +859,14 @@
     </footer>
 
     <script>
+        // Helper para obter o valor de uma variável CSS
+        function getCssVariable(variableName) {
+            return getComputedStyle(document.documentElement).getPropertyValue(variableName).trim();
+        }
+
         // Use DOMContentLoaded to ensure the canvas element exists before trying to get its context
         document.addEventListener('DOMContentLoaded', function() {
-            // Chart.js - Gráfico de distribuição de planos
+            // Chart.js - Gráfico de distribuição de planos (seu gráfico de pizza/rosquinha)
             const ctx = document.getElementById('plansChart');
             if (ctx) { // Check if the canvas element exists
                 new Chart(ctx, {
@@ -900,137 +909,64 @@
                 });
             }
 
-            // D3.js - Diagrama de Fluxo
-            const svg = d3.select("#d3-diagram");
-            // Certifique-se de que o SVG tenha um tamanho definido para que getBoundingClientRect retorne valores válidos
-            // Isso já está no HTML, mas é bom garantir que o CSS também não o restrinja de forma invisível.
-            const width = svg.node().getBoundingClientRect().width;
-            const height = svg.node().getBoundingClientRect().height;
-
-            // Definir os dados para o seu gráfico
-            // 'id' é único para cada nó
-            // 'text' é o que será exibido no nó
-            // 'group' pode ser usado para colorir ou agrupar visualmente (opcional)
-            const nodesData = [
-                { id: "A", text: "Foton", group: "main" },
-                { id: "B", text: "Gestão", group: "category" },
-                { id: "C", text: "Automação", group: "category" },
-                { id: "D", text: "Dados", group: "category" },
-                { id: "E", text: "Educação", group: "category" },
-                { id: "B1", text: "Redmine", group: "tool" },
-                { id: "C1", text: "n8n", group: "tool" },
-                { id: "D1", text: "PostgreSQL", group: "tool" },
-                { id: "E1", text: "Cursos", group: "tool" }
-            ];
-
-            // As arestas (links) conectam os nós
-            // 'source' e 'target' devem corresponder aos 'id' dos nós
-            const linksData = [
-                { source: "A", target: "B" },
-                { source: "A", target: "C" },
-                { source: "A", target: "D" },
-                { source: "A", target: "E" },
-                { source: "B", target: "B1" },
-                { source: "C", target: "C1" },
-                { source: "D", target: "D1" },
-                { source: "E", target: "E1" }
-            ];
-
-            // Escala de cores para os grupos (opcional)
-            const colorScale = d3.scaleOrdinal()
-                .domain(["main", "category", "tool"])
-                .range(["var(--primary)", "var(--accent)", "var(--secondary)"]); // Usando suas variáveis CSS
-
-            // Criar a simulação de força
-            const simulation = d3.forceSimulation(nodesData)
-                .force("link", d3.forceLink(linksData).id(d => d.id).distance(100)) // Distância entre os nós conectados
-                .force("charge", d3.forceManyBody().strength(-300)) // Força de repulsão entre os nós
-                .force("center", d3.forceCenter(width / 2, height / 2)) // Centraliza o grafo
-                .on("tick", ticked); // Função que é chamada a cada tick da simulação
-
-            // Adicionar as arestas (links) ao SVG
-            const link = svg.append("g")
-                .attr("stroke", "var(--gray)")
-                .attr("stroke-opacity", 0.6)
-                .selectAll()
-                .data(linksData)
-                .join("line");
-
-            // Adicionar os nós (com texto e círculo/retângulo) ao SVG
-            const node = svg.append("g")
-                .selectAll()
-                .data(nodesData)
-                .join("g")
-                .call(drag(simulation)); // Habilita arrastar os nós
-
-            // Adiciona um retângulo para o fundo do texto (melhora a legibilidade)
-            node.append("rect")
-                .attr("rx", 5) // Raio da borda para nós arredondados
-                .attr("ry", 5)
-                .attr("fill", d => colorScale(d.group))
-                .attr("stroke", d => d3.color(colorScale(d.group)).darker(0.7))
-                .attr("stroke-width", 2);
-
-            // Adiciona o texto ao nó
-            node.append("text")
-                .text(d => d.text)
-                .attr("font-size", "14px")
-                .attr("font-family", "Montserrat, sans-serif")
-                .attr("fill", "white")
-                .attr("text-anchor", "middle")
-                .attr("alignment-baseline", "middle")
-                .attr("dx", 0) // Ajuste horizontal do texto
-                .attr("dy", 0); // Ajuste vertical do texto
-
-            // Função de "tick" para atualizar as posições dos nós e links
-            function ticked() {
-                link
-                    .attr("x1", d => d.source.x)
-                    .attr("y1", d => d.source.y)
-                    .attr("x2", d => d.target.x)
-                    .attr("y2", d => d.target.y);
-
-                node.attr("transform", d => `translate(${d.x},${d.y})`);
-
-                // Ajusta o tamanho do retângulo ao texto
-                node.each(function(d) {
-                    const textElement = d3.select(this).select("text").node();
-                    const bbox = textElement.getBBox();
-                    const padding = 10;
-                    d3.select(this).select("rect")
-                        .attr("width", bbox.width + 2 * padding)
-                        .attr("height", bbox.height + 2 * padding)
-                        .attr("x", bbox.x - padding)
-                        .attr("y", bbox.y - padding);
+            // NOVO GRÁFICO: Chart.js - Gráfico de Áreas do Ecossistema (Gráfico de Barras Horizontal)
+            const ecosystemCtx = document.getElementById('flowChart');
+            if (ecosystemCtx) {
+                new Chart(ecosystemCtx, {
+                    type: 'bar', // Tipo de gráfico de barras
+                    data: {
+                        labels: ['Gestão', 'Automação', 'Dados', 'Educação'],
+                        datasets: [{
+                            label: 'Foco do Ecossistema Foton', // Título do dataset
+                            data: [.8, .1, .4, .1], // Valores arbitrários, apenas para ter barras de mesmo tamanho
+                            backgroundColor: [
+                                getCssVariable('--primary'),
+                                getCssVariable('--primary'),
+                                getCssVariable('--primary'),
+                                getCssVariable('--primary')
+                            ],
+                            borderColor: [
+                                getCssVariable('--primary-dark'),
+                                getCssVariable('--primary-dark'),
+                                getCssVariable('--primary-dark'),
+                                getCssVariable('--primary-dark')
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y', // Faz com que as barras sejam horizontais
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false // Não precisamos de uma legenda para este gráfico simples
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    title: function() { return ''; }, // Remove o título do tooltip
+                                    label: function(context) {
+                                        // Retorna o label do eixo Y e o valor da barra no eixo X
+                                        return `${context.parsed.x*100}%`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                display: false // Oculta o eixo X, pois os valores são genéricos
+                            },
+                            y: {
+                                grid: {
+                                    display: true // Oculta as linhas de grade do eixo Y para um visual mais limpo
+                                }
+                            }
+                        }
+                    }
                 });
             }
-
-            // Função para arrastar os nós
-            function drag(simulation) {
-                function dragstarted(event, d) {
-                    if (!event.active) simulation.alphaTarget(0.3).restart();
-                    d.fx = d.x;
-                    d.fy = d.y;
-                }
-
-                function dragged(event, d) {
-                    d.fx = event.x;
-                    d.fy = event.y;
-                }
-
-                function dragended(event, d) {
-                    if (!event.active) simulation.alphaTarget(0);
-                    d.fx = null;
-                    d.fy = null;
-                }
-
-                return d3.drag()
-                    .on("start", dragstarted)
-                    .on("drag", dragged)
-                    .on("end", dragended);
-            }
-
-
+        });
 
         // Scroll suave
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
