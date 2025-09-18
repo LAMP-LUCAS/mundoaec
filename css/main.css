@@ -354,6 +354,7 @@
             padding: 1.2rem;
             text-align: left;
             border-bottom: 1px solid var(--light-gray);
+            color: var(--dark); /* Ensure text is dark for legibility */
         }
 
         .pricing-table thead {
@@ -361,21 +362,34 @@
             color: white;
         }
 
+        .pricing-table tbody {
+            background-color: var(--light); /* Light background for the entire table body */
+        }
+
         .pricing-table th {
             font-weight: 600;
         }
 
-        .pricing-table tbody tr:nth-child(even) {
-            background-color: var(--light);
-        }
+        
 
         .pricing-table tbody tr:hover {
-            background-color: #eef5ff; /* Light blue on hover */
+            background-color: var(--light-gray); /* More distinct hover background */
         }
 
         .pricing-table td:first-child {
             font-weight: bold;
             color: var(--primary-dark);
+        }
+
+        .pricing-table td ul { /* Styling for benefit lists */
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .pricing-table td ul li {
+            margin-bottom: 0.5rem; /* Spacing between benefits */
+            line-height: 1.4;
         }
 
         .plans-chart {
