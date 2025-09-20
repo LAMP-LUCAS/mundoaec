@@ -1,38 +1,11 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comunidade Foton - Construa o Futuro da AEC</title>
-    <meta name="description" content="Participe da Comunidade Foton e ajude a construir o futuro da Arquitetura, Engenharia e Construção (AEC) com ferramentas open source e colaborativas.">
-    <meta name="keywords" content="comunidade open source AEC, plugins Redmine AEC, fluxo de caixa construção, BIM, IFC, AutoSINAPI">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../css/main.css">
-</head>
-<body>
-    <header>
-        <div class="container header-container">
-            <div class="logo">
-                <i class="fas fa-lightbulb"></i>
-                <span>MUNDO AEC</span>
-            </div>
-            <nav>
-                <ul>
-                    <li><a href="../#problem">O Desafio</a></li>
-                    <li><a href="../#solution">A Solução</a></li>
-                    <li><a href="../#ecosystem">Ecossistema</a></li>
-                    <li><a href="../#contribute">Contribua</a></li>
-                    <li><a href="../#sustainability">Apoie</a></li>
-                </ul>
-            </nav>
-            <div class="cta-btns">
-                <a href="https://github.com/LAMP-LUCAS/foton" class="btn">GitHub</a>
-                <a href="https://comunidade.mundoaec.com/projects/foton" class="btn btn-outline">Comunidade</a>
-            </div>
-        </div>
-    </header>
+---
+import Layout from '../layouts/Layout.astro';
+import CodeSnippets from '../components/snippets.md';
+import '../styles/autosinapi.css';
+---
 
+<Layout title="AutoSINAPI - API de Dados do SINAPI" description="Acesse dados atualizados do SINAPI via API para orçamentos precisos e automação. Integre em minutos, atualize em segundos.">
+    <!-- Hero Section -->
     <section class="hero">
         <div class="container">
             <h1>Construa o futuro da AEC com a Comunidade Foton</h1>
@@ -273,36 +246,6 @@
         </div>
     </section>
 
-    <footer>
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-column">
-                    <h3>Foton</h3>
-                    <p>Ecossistema colaborativo open source para transformar a indústria da construção civil brasileira.</p>
-                </div>
-                <div class="footer-column">
-                    <h3>Links Rápidos</h3>
-                    <ul class="footer-links">
-                        <li><a href="https://github.com/LAMP-LUCAS/foton">Repositório GitHub</a></li>
-                        <li><a href="https://comunidade.mundoaec.com/projects/foton">Comunidade</a></li>
-                        <li><a href="https://github.com/LAMP-LUCAS/foton/blob/master/CONTRIBUTING.md">Guia de Contribuição</a></li>
-                        <li><a href="../">Mundo AEC</a></li>
-                    </ul>
-                </div>
-                <div class="footer-column">
-                    <h3>Contato</h3>
-                    <ul class="footer-links">
-                        <li><i class="fas fa-envelope"></i> lucas@arqlamp.com</li>
-                        <li><i class="fas fa-phone"></i> +55 62 98161-3868</li>
-                        <li><i class="fab fa-github"></i> github.com/LAMP-LUCAS</li>
-                    </ul>
-                </div>
-            </div>
-            <div class="copyright">
-                <p>&copy; 2023 Foton - Ecossistema Colaborativo Open Source para AEC. Licença GPLv3.</p>
-            </div>
-        </div>
-    </footer>
 
     <script>
         // Scroll suave para âncoras
@@ -320,5 +263,5 @@
             });
         });
     </script>
-</body>
-</html>
+
+</Layout>

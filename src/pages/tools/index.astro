@@ -1,0 +1,106 @@
+---
+// src/pages/tools/index.astro
+import Layout from '../../layouts/Layout.astro';
+
+// 1. Busque todos os arquivos .astro dentro desta pasta
+// A função Astro.glob() retorna um array de objetos para cada arquivo encontrado.
+// O argumento `**/` faz a busca recursiva, o `*.astro` busca todos os arquivos .astro.
+const allTools = await Astro.glob('./*.astro');
+
+// 2. Filtre o arquivo 'index.astro' para não listá-lo
+const listedTools = allTools.filter(tool => !tool.file.includes('index.astro'));
+
+// 3. Opcional: Ordene as ferramentas por título ou nome de arquivo
+listedTools.sort((a, b) => a.url.localeCompare(b.url));
+
+// Função para formatar o nome do link, ex: /tools/calculadora -> Calculadora
+function formatLinkName(url) {
+  // Pega a última parte da URL (ex: calculadora.astro)
+  const parts = url.split('/');
+  const fileName = parts[parts.length - 1].replace('.astro', '');
+  
+  // Converte a primeira letra para maiúscula
+  return fileName.charAt(0).toUpperCase() + fileName.slice(1);
+}
+---
+<Layout title="Ferramentas">
+  <div class="container mx-auto px-4 py-8">
+    <h1 class="text-4xl font-bold text-center mb-12">Nossas Ferramentas</h1>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {listedTools.map(tool => (
+        <a href={tool.url} class="tool-card">
+          <h2>{formatLinkName(tool.url)}</h2>
+          <p>Explore a ferramenta {formatLinkName(tool.url.toLowerCase())} e simplifique suas tarefas de construção.</p>
+        </a>
+      ))}
+    </div>
+  </div>
+</Layout>
+
+<style>
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Título principal */
+h1 {
+  font-size: 2.75rem;
+  font-weight: 700;
+  color: #1a202c;
+  margin-bottom: 3rem;
+  text-align: center;
+}
+
+/* Grid de ferramentas */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+}
+
+/* Card de ferramenta */
+.tool-card {
+  background: linear-gradient(135deg, #ffffff, #f8f9fa);
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.75rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.tool-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+/* Título da ferramenta */
+.tool-card h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #3b82f6;
+  margin-bottom: 0.5rem;
+}
+
+/* Descrição */
+.tool-card p {
+  font-size: 1rem;
+  color: #4a5568;
+  line-height: 1.5;
+}
+
+/* Ícone opcional */
+.tool-card::before {
+  content: "🛠️";
+  font-size: 1.75rem;
+  margin-bottom: 0.75rem;
+  display: block;
+}
+
+</style>
