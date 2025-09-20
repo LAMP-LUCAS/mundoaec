@@ -1,0 +1,102 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+<Layout title="Gerenciador de EAP e Orçamento" description="Ferramenta para criar e gerenciar a Estrutura Analítica do Projeto (EAP) com custos, relatórios e exportação de BOM.">
+
+    <div class="container-principal">
+        <section class="header-pagina">
+            <h1 class="titulo-principal">Gerenciador de EAP e Orçamento</h1>
+            <p class="descricao-pagina">Estrutura Analítica do Projeto com custos, relatórios e exportação de BOM.</p>
+            <p id="total-project-cost" class="custo-total"></p>
+        </section>
+
+        <section class="secao-container">
+            <h2 class="titulo-secao">Insumos</h2>
+            <div id="insumos-list" class="lista-itens">
+                </div>
+            <div class="campos-input-container">
+                <input type="text" id="insumo-nome" placeholder="Nome do Insumo" class="input-padrao">
+                <input type="text" id="insumo-unidade" placeholder="Unidade (ex: m², kg)" class="input-padrao">
+                <input type="number" id="insumo-custo" placeholder="Custo por Unidade" step="0.01" class="input-padrao">
+                <button id="add-insumo-btn" class="button-primary">Adicionar Insumo</button>
+            </div>
+        </section>
+
+        <section class="secao-container">
+            <h2 class="titulo-secao">Composições</h2>
+            <div id="composicoes-list" class="lista-itens espacamento-secao">
+                </div>
+            <div class="campos-input-container">
+                <input type="text" id="composicao-nome" placeholder="Nome da Composição" class="input-padrao">
+                <input type="text" id="composicao-unidade" placeholder="Unidade (ex: un, m)" class="input-padrao">
+                <button id="add-composicao-btn" class="button-primary">Adicionar Composição</button>
+            </div>
+        </section>
+
+        <section class="secao-container">
+            <h2 class="titulo-secao">Estrutura Analítica do Projeto (EAP)</h2>
+            <div id="eap-list" class="lista-itens">
+                </div>
+            <div class="campos-input-container">
+                <input type="text" id="eap-nome" placeholder="Nome do Projeto ou Fase" class="input-padrao">
+                <button id="add-eap-btn" class="button-primary">Adicionar EAP Principal</button>
+            </div>
+        </section>
+
+        <section class="secao-container">
+            <h2 class="titulo-secao">Análise e Relatórios</h2>
+            <div class="relatorios-container">
+                <div>
+                    <h3 class="subtitulo-relatorio">Custo Total por EAP</h3>
+                    <div class="grafico-container">
+                        <canvas id="pie-chart"></canvas>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="subtitulo-relatorio">Curva ABC de Insumos</h3>
+                    <div class="grafico-container">
+                         <canvas id="abc-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="secao-container">
+            <h2 class="titulo-secao">Exportar Dados</h2>
+            <div class="exportar-container">
+                <button id="export-json-btn" class="button-secondary">Exportar JSON (Completo)</button>
+                <button id="export-total-bom-btn" class="button-secondary">Exportar BOM (Total)</button>
+                <div class="container-select-export">
+                    <select id="eap-bom-select" class="input-padrao"></select>
+                    <button id="export-eap-bom-btn" class="button-secondary">Exportar BOM (por EAP)</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <section id="message-modal" class="modal-padrao oculto">
+        <div class="modal-conteudo">
+            <p id="message-text" class="modal-texto"></p>
+            <button id="close-modal-btn" class="button-primary">OK</button>
+        </div>
+    </section>
+
+    <section id="add-item-modal" class="modal-padrao oculto">
+        <div class="modal-conteudo-grande">
+            <h3 class="titulo-modal">Adicionar Item à EAP</h3>
+            <p id="eap-modal-title" class="texto-modal-eap"></p>
+            <select id="item-to-add-select" class="input-padrao">
+                <option value="">-- Selecione um item --</option>
+            </select>
+            <input type="number" id="item-to-add-quantidade" placeholder="Quantidade" step="0.01" class="input-padrao">
+            <div class="modal-botoes-container">
+                <button id="confirm-add-item-btn" class="button-primary">Adicionar</button>
+                <button id="cancel-add-item-btn" class="button-secondary">Cancelar</button>
+            </div>
+        </div>
+    </section>   
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module" src="/scripts/eap.js"></script>
+
+</Layout>

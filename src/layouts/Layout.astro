@@ -1,0 +1,38 @@
+---
+// src/layouts/Layout.astro
+import Header from '../components/header.astro';
+import Footer from '../components/footer.astro';
+import '../styles/global.css'; // Importe seu CSS global aqui
+
+const { title } = Astro.props;
+---
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{title} - Mundo AEC</title>
+    <meta name="description" content="Levamos BIM e tecnologia aberta, do investidor ao usuário final, com ferramentas práticas e acessíveis.">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+        
+    <link rel="stylesheet" href="/src/styles/global.css">
+    <!-- Google Tag Manager -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-2TXXJW3QG1"></script>
+    <!-- <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){
+            dataLayer.push(arguments)
+        ;}
+        gtag('js', new Date());
+        gtag('config', 'G-2TXXJW3QG1');
+    </script> -->
+</head>
+<body>
+    <Header />
+    <main>
+        <slot /> <!-- O conteúdo da página será injetado aqui -->
+    </main>
+    <Footer />
+</body>
+</html>
