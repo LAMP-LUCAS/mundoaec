@@ -1,6 +1,5 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import CodeSnippets from '../components/snippets.md';
 import '../styles/autosinapi.css';
 ---
 
@@ -181,6 +180,14 @@ import '../styles/autosinapi.css';
         </div>
     </section>
 
+    <!--
+    
+    O modelo de sustentabilidade foi removido temporariamente para focar na construção da comunidade e das ferramentas.
+    Podemos reintroduzir essa seção no futuro, quando tivermos uma base sólida de usuários e contribuidores.
+    
+    Outro ponto crucial é que o ideal possa ser um modelo com acesso gratuíto limitado a 1 projeto por mês e planos para mais projetos.
+    Features como cursos, créditos de IA, integração whatsapp, boost AI, etc. podem ser oferecidos como serviços adicionais ou em modelos de créditos.
+    ---------------
     <section id="apoio" class="cta">
         <div class="container">
             <h2>Planos de Apoio: Soluções Prontas para Empresas</h2>
@@ -245,7 +252,68 @@ import '../styles/autosinapi.css';
             </div>
         </div>
     </section>
+    -->
+    
+    <section id="sustentabilidade" class="sustainability">
+        <div class="container">
+            <div class="section-header">
+                <h2>Nosso Modelo de Sustentabilidade</h2>
+                <p>Nossa filosofia é baseada na colaboração, cooperação e construção de uma comunidade forte. Oferecemos um modelo flexível que se adapta às suas necessidades.</p>
+            </div>
 
+            <div class="pricing-tiers">
+                <div class="tier-card">
+                    <h3>Gratuito</h3>
+                    <p class="price">R$0</p>
+                    <ul>
+                        <li><i class="fas fa-check"></i> <strong>1 projeto</strong> por mês</li>
+                        <li><i class="fas fa-check"></i> Acesso à comunidade</li>
+                        <li><i class="fas fa-check"></i> Ferramentas open source</li>
+                    </ul>
+                    <a href="#" class="btn btn-outline">Comece Agora</a>
+                </div>
+                <div class="tier-card popular">
+                    <h3>VIP</h3>
+                    <p class="price">R$150,00<span class="period">/mês</span></p>
+                    <ul>
+                        <li><i class="fas fa-check"></i> <strong>4 projetos</strong> por mês</li>
+                        <li><i class="fas fa-check"></i> Acesso prioritário a novos recursos</li>
+                        <li><i class="fas fa-check"></i> Suporte da comunidade</li>
+                    </ul>
+                    <a href="#" class="btn">Seja VIP</a>
+                </div>
+                <div class="tier-card">
+                    <h3>Premium</h3>
+                    <p class="price">R$1.500,00<span class="period">/mês</span></p>
+                    <ul>
+                        <li><i class="fas fa-check"></i> <strong>10 projetos</strong> por mês</li>
+                        <li><i class="fas fa-check"></i> Suporte dedicado</li>
+                        <li><i class="fas fa-check"></i> Acesso a todos os serviços</li>
+                    </ul>
+                    <a href="#" class="btn btn-outline">Torne-se Premium</a>
+                </div>
+                <div class="tier-card">
+                    <h3>Exclusive</h3>
+                    <p class="price">Sob Demanda</p>
+                    <ul>
+                        <li><i class="fas fa-check"></i> <strong>Projetos ilimitados</strong></li>
+                        <li><i class="fas fa-check"></i> Soluções personalizadas</li>
+                        <li><i class="fas fa-check"></i> Consultoria especializada</li>
+                    </ul>
+                    <a href="#" class="btn btn-outline">Entre em Contato</a>
+                </div>
+            </div>
+
+            <div class="additional-services">
+                <h3>Serviços Adicionais e Créditos</h3>
+                <p>Potencialize seus projetos com funcionalidades sob demanda. Oferecemos templates, guias, integração com WhatsApp, assistente de IA e muito mais através de serviços adicionais ou um modelo de créditos flexível.</p>
+            </div>
+
+            <div style="margin-top: 2rem; text-align: center;">
+                <a href="https://comunidade.mundoaec.com/projects/foton" class="btn">Junte-se à Nossa Comunidade</a>
+            </div>
+        </div>
+    </section>
 
     <script>
         // Scroll suave para âncoras
@@ -265,3 +333,140 @@ import '../styles/autosinapi.css';
     </script>
 
 </Layout>
+
+<style>
+    .sustainability {
+        background: linear-gradient(to bottom, #f0f7ff, white);
+    }
+
+    .pricing-tiers {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+        margin-top: 4rem;
+        align-items: center; /* Alinha os cards na vertical */
+    }
+
+    .tier-card {
+        background: white;
+        border-radius: 12px;
+        padding: 2.5rem 2rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        text-align: center;
+        border: 2px solid transparent;
+        display: flex;
+        flex-direction: column;
+        height: 100%; /* Faz todos os cards terem a mesma altura */
+    }
+
+    .tier-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    .tier-card h3 {
+        font-size: 1.75rem;
+        color: var(--primary-dark);
+        margin-bottom: 1rem;
+    }
+
+    .tier-card .price {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: var(--primary);
+        margin-bottom: 1.5rem;
+    }
+
+    .tier-card .price .period {
+        font-size: 1rem;
+        font-weight: 500;
+        color: var(--gray);
+    }
+
+    .tier-card ul {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 2rem 0;
+        text-align: left;
+        flex-grow: 1; /* Faz a lista crescer para preencher o espaço */
+    }
+
+    .tier-card ul li {
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .tier-card ul li i {
+        color: var(--accent);
+    }
+
+    .tier-card .btn, .tier-card .btn-outline {
+        width: 100%;
+        margin-top: auto; /* Empurra o botão para o final do card */
+    }
+
+    /* Estilo para o card popular */
+    .tier-card.popular {
+        border-color: var(--secondary);
+        transform: scale(1.05);
+        position: relative;
+    }
+
+    .tier-card.popular::before {
+        content: 'MAIS POPULAR';
+        position: absolute;
+        top: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--secondary);
+        color: white;
+        padding: 0.3rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: bold;
+        letter-spacing: 1px;
+    }
+
+    /* Botões dentro dos cards */
+    .tier-card .btn-outline {
+        border-color: var(--secondary);
+        color: var(--secondary);
+    }
+
+    .tier-card .btn-outline:hover {
+        background: var(--secondary);
+        color: white;
+    }
+
+    .additional-services {
+        text-align: center;
+        margin-top: 4rem;
+        padding: 2rem;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    .additional-services h3 {
+        font-size: 1.75rem;
+        color: var(--primary-dark);
+        margin-bottom: 1rem;
+    }
+
+    .additional-services p {
+        font-size: 1.1rem;
+        color: var(--gray);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    @media (max-width: 992px) {
+        .tier-card.popular {
+            transform: scale(1); /* Remove o scale em telas menores para evitar sobreposição */
+        }
+    }
+
+</style>
