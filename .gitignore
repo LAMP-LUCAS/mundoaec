@@ -1,5 +1,0 @@
-# Ignore everything
-*
-# But don't ignore the dist folder and the .gitignore file itself
-!/dist/
-!.gitignore
