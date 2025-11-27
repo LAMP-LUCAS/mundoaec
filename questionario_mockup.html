@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador de Questionários e Avaliações</title>
+    <!-- Carregamento do Tailwind CSS para estilização rápida e responsiva -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Configuração do Tailwind para usar a fonte Inter e cores padrão -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'primary': '#4f46e5',
+                        'success': '#10b981',
+                        'danger': '#ef4444',
+                        'info': '#3b82f6',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Estilos customizados para melhorar a legibilidade e a estética */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .container-box {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+        .option-label {
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .option-label:hover {
+            background-color: #e5e7eb;
+        }
+        input[type="radio"]:checked + .option-label {
+            background-color: #d1d5db;
+            border-color: #4f46e5;
+        }
+        /* Estilos para o modo de exibição de resultado (correto/incorreto) */
+        .question-correct .option-label.is-correct {
+            background-color: #d1fae5; /* Verde claro */
+            border-color: #059669;
+            font-weight: 600;
+        }
+        .question-incorrect .option-label.is-correct {
+            background-color: #d1fae5; /* Verde claro */
+            border-color: #059669;
+            font-weight: 600;
+        }
+        .question-incorrect .option-label.is-selected {
+            background-color: #fee2e2; /* Vermelho claro */
+            border-color: #dc2626;
+        }
+
+        /* Estilo para a área de texto do template */
+        #markdown-input {
+            min-height: 400px;
+        }
+        /* Classes de status para a tabela de gabarito */
+        .status-correct { color: #10b981; font-weight: 600; }
+        .status-incorrect { color: #ef4444; font-weight: 600; }
+        .status-unanswered { color: #9ca3af; font-style: italic; }
+        
+        /* Classe para forçar quebra de linha em PDF (temporária) */
+        .pdf-page-break {
+            page-break-before: always;
+        }
+
+        /* Formatação da resposta da IA */
+        #gemini-modal-content strong {
+            color: #4f46e5;
+            font-weight: 600;
+        }
+        #gemini-modal-content em {
+            font-style: italic;
+            color: #374151;
+        }
+    </style>
+    <!-- Carregamento das bibliotecas para gráficos e exportação -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body class="p-4 md:p-8">
+
+    <main id="app-container" class="max-w-7xl mx-auto">
+        <h1 class="text-4xl font-extrabold text-gray-900 mb-8 text-center text-primary">Gerenciador de Avaliações Monolito</h1>
+
+        <!-- 1. Módulo de Configuração/Input -->
+        <section id="config-module" class="container-box bg-white p-6 rounded-xl mb-8">
+            <h2 class="text-2xl font-bold mb-4 text-gray-700">1. Entrada do Questionário (Markdown)</h2>
+
+            <div class="mb-4">
+                <p class="text-sm text-gray-600 mb-2">Cole o texto do seu questionário no formato Markdown (incluindo o gabarito) ou use o template abaixo para estruturar suas questões.</p>
+                <button id="load-template-btn" class="px-4 py-2 bg-info text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 transition duration-150">
+                    Carregar Template Padrão
+                </button>
+            </div>
+
+            <textarea id="markdown-input" class="w-full p-4 border-2 border-gray-300 rounded-lg focus:ring-primary focus:border-primary resize-y text-sm font-mono" placeholder="Cole o seu questionário Markdown aqui..."></textarea>
+
+            <button id="load-quiz-btn" class="w-full mt-4 px-6 py-3 bg-primary text-white font-bold text-lg rounded-lg shadow-lg hover:bg-indigo-600 transition duration-150 disabled:opacity-50" disabled>
+                Iniciar Questionário
+            </button>
+        </section>
+
+        <!-- 2. Módulo de Questionário (Escondido initially) -->
+        <section id="quiz-module" class="container-box bg-white p-6 rounded-xl hidden">
+            <h2 id="quiz-discipline-title" class="text-2xl font-bold mb-4 text-primary"></h2>
+            
+            <!-- Container das Questões (Será movido para os resultados) -->
+            <div id="questions-list">
+                <!-- Questões serão renderizadas aqui -->
+            </div>
+
+            <div id="quiz-status" class="mt-4 p-3 bg-gray-100 rounded-lg text-sm text-gray-600 font-medium"></div>
+
+            <button id="finish-quiz-btn" class="w-full mt-6 px-6 py-3 bg-success text-white font-bold text-lg rounded-lg shadow-lg hover:bg-green-600 transition duration-150">
+                Finalizar e Ver Resultados
+            </button>
+        </section>
+
+        <!-- 3. Módulo de Resultados (Escondido initially) -->
+        <section id="results-module" class="container-box bg-white p-6 rounded-xl hidden">
+            <h2 class="text-3xl font-extrabold mb-6 text-primary">Dashboard de Resultados</h2>
+
+            <!-- BOTÕES DE CONTROLE (Mantidos fora da área de captura do Dashboard) -->
+            <div class="flex flex-wrap justify-between gap-4 mb-6">
+                <button id="export-pdf-btn" class="flex-1 min-w-[150px] px-4 py-2 bg-danger text-white font-semibold rounded-lg hover:bg-red-600 transition duration-150 flex items-center justify-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Exportar PDF
+                </button>
+                <button id="export-png-btn" class="flex-1 min-w-[150px] px-4 py-2 bg-info text-white font-semibold rounded-lg hover:bg-blue-600 transition duration-150 flex items-center justify-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    Exportar PNG
+                </button>
+                <button id="reset-app-btn" class="flex-1 min-w-[150px] px-4 py-2 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition duration-150 flex items-center justify-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2.134m0 0V15"></path></svg>
+                    Novo Questionário
+                </button>
+            </div>
+
+            <!-- CONTAINER DO DASHBOARD (SERÁ CAPTURADO PARA PÁGINA 1) -->
+            <div id="dashboard-content">
+                <!-- Sumário de resultados -->
+                <div id="results-summary" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 text-center">
+                    <!-- Sumário de resultados -->
+                </div>
+
+                <!-- Gráficos de Comparação -->
+                <div id="report-charts" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-gray-50 p-4 rounded-lg shadow-inner">
+                        <h3 class="text-xl font-semibold mb-3 text-gray-700">Desempenho por Disciplina</h3>
+                        <div class="h-96 w-full"><canvas id="discipline-chart"></canvas></div>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg shadow-inner">
+                        <h3 class="text-xl font-semibold mb-3 text-gray-700">Distribuição Global de Acertos</h3>
+                        <div class="h-96 w-full"><canvas id="global-chart"></canvas></div>
+                    </div>
+                </div>
+
+                <!-- Detalhe da performance por questão/disciplina -->
+                <div id="discipline-details" class="mt-8">
+                    <h3 class="text-2xl font-bold mb-4 text-gray-700">Detalhes por Questão</h3>
+                    <!-- Gráficos de detalhe serão inseridos aqui -->
+                </div>
+            </div>
+            <!-- FIM DO CONTAINER DO DASHBOARD -->
+            
+            <!-- TABELA DE GABARITO DETALHADA (SERÁ CAPTURADA PARA PÁGINAS 2+) -->
+            <div id="answer-review" class="mt-12">
+                <h3 class="text-2xl font-bold mb-4 text-gray-700 border-b pb-2">Gabarito e Revisão de Respostas</h3>
+                <div id="gabarito-table-container" class="overflow-x-auto">
+                    <!-- Tabela de Gabarito será renderizada aqui -->
+                </div>
+                <!-- Container para a lista de questões revisadas (movida para cá) -->
+            </div>
+        </section>
+
+        <!-- Módulo de Mensagens -->
+        <div id="message-box" class="fixed bottom-4 right-4 p-3 bg-gray-900 text-white rounded-lg shadow-xl transition-opacity duration-300 opacity-0 pointer-events-none"></div>
+
+        <!-- MODAL DA GEMINI API (Novo) -->
+        <div id="gemini-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
+            <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6 relative">
+                <button id="gemini-modal-close" class="absolute top-4 right-4 text-gray-500 hover:text-gray-800">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+                <h3 class="text-2xl font-bold mb-4 text-primary flex items-center">
+                    <span class="text-2xl mr-2">✨</span> Análise da Questão
+                </h3>
+                
+                <!-- Container de Loading (Agora é irmão do conteúdo) -->
+                <div id="gemini-loading" class="text-center p-8">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                    <p class="mt-4 text-gray-600">Aguarde, consultando o tutor IA...</p>
+                </div>
+
+                <!-- Container de Conteúdo (Escondido por padrão) -->
+                <div id="gemini-modal-content" class="text-gray-700 max-h-[60vh] overflow-y-auto pr-2 leading-relaxed hidden">
+                    <!-- Conteúdo da API será inserido aqui -->
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script type="text/javascript">
+        // Estrutura modular (Monolito Modular em JS) para organizar o código
+        const APP = {};
+
+        // Variável de estado global para armazenar dados e instâncias
+        APP.state = {
+            quizData: null, // Estrutura de dados do questionário (disciplines, gabarito)
+            userAnswers: {}, // Respostas do usuário { "ID_UNICO": "C", ... }
+            chartInstances: [], // Instâncias de Chart.js para destruição/atualização
+        };
+
+        // =========================================================================
+        // MÓDULO 1: MARKDOWN_PARSER (Processamento e Estruturação de Dados)
+        // =========================================================================
+        APP.MARKDOWN_PARSER = {
+            // Função principal que transforma o texto Markdown em uma estrutura de dados JS
+            parse: function(markdownText) {
+                if (!markdownText) return null;
+
+                const lines = markdownText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+                const data = { disciplines: [], gabarito: {} };
+                let currentDiscipline = null;
+                let currentQuestion = null;
+                let isGabaritoSection = false;
+                let uniqueIdCounter = 1; // Contador global para garantir IDs únicos
+
+                // Expressões regulares para identificar seções e elementos
+                const regexDiscipline = /^##\s*Disciplina:\s*(.*)/i;
+                const regexQuestionTitle = /^###\s*Questão\s*(\d+):\s*(.*)/i; // Exige número da questão
+                const regexText = /^(\*\*Texto:\*\*)\s*(.*)/i;
+                const regexEnunciated = /^(\*\*Enunciado:\*\*)\s*(.*)/i;
+                const regexOption = /^- ([A-Za-z]\.)\s*(.*)/;
+                const regexGabaritoHeader = /^##\s*Gabarito/i;
+                
+                // Expressão para capturar o título da disciplina ou a resposta no gabarito
+                const regexGabaritoSectionHeader = /^(###|####)\s*([A-Za-zÀ-ÿ\s]+)/i;
+                // Expressão flexível para Gabarito, aceitando ###, #### ou ##### antes de 'Questão'
+                const regexGabaritoAnswer = /^(###|####|#####)\s*Questão\s*(\d+):\s*([A-Za-z])/i; 
+
+                let currentGabaritoDiscipline = null;
+                const gabaritoAnswersMap = {}; // Maps "Discipline_QNum" -> Answer
+
+                // PRIMEIRA PASSAGEM: Identificação das Questões e Gabarito
+                for (const line of lines) {
+                    // 1. Início da seção Gabarito
+                    if (regexGabaritoHeader.test(line)) {
+                        isGabaritoSection = true;
+                        continue;
+                    }
+
+                    if (isGabaritoSection) {
+                        // 2. Processamento do Gabarito (Mapeamento Disciplina + Num)
+                        
+                        // Captura o cabeçalho da disciplina (ex: ### Matemática)
+                        const disciplineHeaderMatch = line.match(regexGabaritoSectionHeader); 
+                        if (disciplineHeaderMatch && !line.includes('Questão')) { // Ignora se for Questão
+                            currentGabaritoDiscipline = disciplineHeaderMatch[2].trim();
+                            continue;
+                        }
+
+                        // Captura a resposta da questão (ex: #### Questão 1: A)
+                        const gabaritoAnswerMatch = line.match(regexGabaritoAnswer);
+                        
+                        if (gabaritoAnswerMatch && currentGabaritoDiscipline) {
+                            const qNum = gabaritoAnswerMatch[2]; 
+                            const answer = gabaritoAnswerMatch[3].toUpperCase(); 
+                            // Cria uma chave única combinando Disciplina e Número da Questão
+                            const uniqueKey = `${currentGabaritoDiscipline}_${qNum}`; 
+                            gabaritoAnswersMap[uniqueKey] = answer;
+                        }
+
+                    } else {
+                        // 3. Início de nova Disciplina
+                        const disciplineMatch = line.match(regexDiscipline);
+                        if (disciplineMatch) {
+                            currentDiscipline = { name: disciplineMatch[1].trim(), questions: [] };
+                            data.disciplines.push(currentDiscipline);
+                            currentQuestion = null;
+                            continue;
+                        }
+
+                        // 4. Início de nova Questão
+                        const questionMatch = line.match(regexQuestionTitle);
+                        if (questionMatch) {
+                            const qNum = questionMatch[1]; // Número local (pode ser repetido)
+                            
+                            if (!currentDiscipline) {
+                                throw new Error("Questão encontrada antes de qualquer definição de disciplina. Use '## Disciplina: <Nome>' antes da primeira questão.");
+                            }
+                            
+                            currentQuestion = {
+                                internalId: String(uniqueIdCounter++), // ID único sequencial (Chave para o estado/respostas)
+                                displayNum: qNum,                       // Número para exibição (ex: '1')
+                                title: questionMatch[2].trim(),
+                                enunciated: '',
+                                text: '',
+                                options: [],
+                                discipline: currentDiscipline.name,
+                            };
+                            currentDiscipline.questions.push(currentQuestion);
+                            continue;
+                        }
+
+                        // 5. Continuação de Texto/Enunciado/Opções
+                        if (currentQuestion) {
+                            const textMatch = line.match(regexText);
+                            const enunciatedMatch = line.match(regexEnunciated);
+                            const optionMatch = line.match(regexOption);
+                            
+                            if (textMatch) {
+                                currentQuestion.text = textMatch[2].trim();
+                            } else if (enunciatedMatch) {
+                                currentQuestion.enunciated = enunciatedMatch[2].trim();
+                            } else if (optionMatch) {
+                                const optionId = optionMatch[1].replace('.', '').toUpperCase();
+                                const optionText = optionMatch[2].trim();
+                                currentQuestion.options.push({ id: optionId, text: optionText });
+                            } else {
+                                // 8. Se a linha não for um marcador, pode ser a continuação do enunciado/texto
+                                if (currentQuestion.text && !currentQuestion.options.length) {
+                                    currentQuestion.text += ' ' + line.trim();
+                                } else if (currentQuestion.enunciated) {
+                                    currentQuestion.enunciated += ' ' + line.trim();
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // SEGUNDA PASSAGEM: Mapeamento do Gabarito para os IDs Únicos
+                data.disciplines.forEach(disc => {
+                    disc.questions.forEach(q => {
+                        const uniqueKey = `${disc.name}_${q.displayNum}`;
+                        if (gabaritoAnswersMap[uniqueKey]) {
+                            // Associa o gabarito ao ID interno único
+                            data.gabarito[q.internalId] = gabaritoAnswersMap[uniqueKey]; 
+                        }
+                    });
+                });
+
+
+                if (data.disciplines.length === 0 || Object.keys(data.gabarito).length === 0) {
+                    throw new Error("Não foi possível extrair disciplinas ou o gabarito. Verifique se o formato '## Disciplina: <Nome>' e o gabarito '## Gabarito' estão corretos.");
+                }
+
+                // Normaliza e verifica se todas as questões têm gabarito (agora usando internalId)
+                let totalQuestions = 0;
+                let missingGabaritoCount = 0;
+                
+                data.disciplines.forEach(disc => {
+                    disc.questions = disc.questions.filter(q => {
+                        totalQuestions++;
+                        if (!data.gabarito[q.internalId]) {
+                            console.warn(`Questão ${q.displayNum} na disciplina ${disc.name} não possui gabarito e será ignorada.`);
+                            missingGabaritoCount++;
+                            return false; // Remove questões sem gabarito
+                        }
+                        return true;
+                    });
+                });
+
+                if (missingGabaritoCount > 0) {
+                     APP.UI_RENDERER.showMessage(`Atenção: ${missingGabaritoCount} questão(ões) foram ignoradas por falta de gabarito.`, 'danger', 7000);
+                }
+
+                return data;
+            },
+        };
+
+
+        // =========================================================================
+        // MÓDULO 2: QUIZ_MANAGER (Gerenciamento de Estado e Lógica de Avaliação)
+        // =========================================================================
+        APP.QUIZ_MANAGER = {
+            // Inicia o processo de carregamento do quiz
+            loadQuiz: function() {
+                const markdownText = document.getElementById('markdown-input').value;
+                const loadBtn = document.getElementById('load-quiz-btn');
+
+                if (!markdownText.trim()) {
+                    APP.UI_RENDERER.showMessage('Por favor, insira o texto do questionário em Markdown.', 'danger');
+                    return;
+                }
+
+                loadBtn.disabled = true;
+                loadBtn.textContent = 'Processando...';
+
+                try {
+                    APP.state.quizData = APP.MARKDOWN_PARSER.parse(markdownText);
+                    APP.state.userAnswers = {}; // Resetar respostas
+                    APP.UI_RENDERER.renderQuizView();
+                    APP.UI_RENDERER.showMessage(`Questionário de ${APP.state.quizData.disciplines.length} disciplina(s) carregado com sucesso!`, 'success');
+                } catch (error) {
+                    APP.UI_RENDERER.showMessage('Erro ao processar o Markdown: ' + error.message, 'danger', 10000);
+                    console.error("Erro no carregamento do Quiz:", error);
+                } finally {
+                    loadBtn.disabled = false;
+                    loadBtn.textContent = 'Iniciar Questionário';
+                }
+            },
+
+            // Salva a resposta do usuário e atualiza o status (Usa ID Interno)
+            saveAnswer: function(questionInternalId, answerId) {
+                APP.state.userAnswers[questionInternalId] = answerId;
+                APP.QUIZ_MANAGER.updateStatus();
+            },
+
+            // Atualiza o contador de questões respondidas
+            updateStatus: function() {
+                const totalQuestions = APP.QUIZ_MANAGER.getTotalQuestionsCount();
+                const answeredCount = Object.keys(APP.state.userAnswers).length;
+                const statusDiv = document.getElementById('quiz-status');
+                statusDiv.innerHTML = `Progresso: ${answeredCount} de ${totalQuestions} questões respondidas.`;
+            },
+
+            // Retorna o número total de questões
+            getTotalQuestionsCount: function() {
+                if (!APP.state.quizData || !APP.state.quizData.disciplines) return 0;
+                return APP.state.quizData.disciplines.reduce((acc, disc) => acc + disc.questions.length, 0);
+            },
+
+            // Finaliza o quiz, calcula o resultado e exibe o dashboard
+            finishQuiz: function() {
+                const totalQuestions = APP.QUIZ_MANAGER.getTotalQuestionsCount();
+                const answeredCount = Object.keys(APP.state.userAnswers).length;
+
+                if (answeredCount < totalQuestions) {
+                    APP.UI_RENDERER.showMessage(`Atenção: Você respondeu apenas ${answeredCount} de ${totalQuestions} questões. Continue para ver o resultado.`, 'info');
+                }
+
+                const results = APP.QUIZ_MANAGER.calculateResults();
+                APP.UI_RENDERER.renderResultsView(results);
+            },
+
+            // Calcula a pontuação e métricas (Usa ID Interno)
+            calculateResults: function() {
+                const gabarito = APP.state.quizData.gabarito;
+                const results = {
+                    totalCorrect: 0,
+                    totalIncorrect: 0,
+                    totalUnanswered: 0,
+                    totalQuestions: APP.QUIZ_MANAGER.getTotalQuestionsCount(),
+                    disciplineStats: {}, // Estatísticas por disciplina
+                    questionReview: [] // Detalhes da questão para a tabela de gabarito
+                };
+
+                APP.state.quizData.disciplines.forEach(disc => {
+                    const discStats = { correct: 0, incorrect: 0, unanswered: 0, total: disc.questions.length, questionDetails: {} };
+
+                    disc.questions.forEach(q => {
+                        const internalId = q.internalId;
+                        const userAnswer = APP.state.userAnswers[internalId];
+                        const correctAnswer = gabarito[internalId];
+                        let status;
+
+                        if (userAnswer === undefined) {
+                            discStats.unanswered++;
+                            results.totalUnanswered++;
+                            status = 'unanswered';
+                        } else if (userAnswer === correctAnswer) {
+                            discStats.correct++;
+                            results.totalCorrect++;
+                            status = 'correct';
+                        } else {
+                            discStats.incorrect++;
+                            results.totalIncorrect++;
+                            status = 'incorrect';
+                        }
+                        
+                        discStats.questionDetails[internalId] = status;
+
+                        // Adiciona detalhes para a tabela de revisão
+                        results.questionReview.push({
+                            internalId: internalId,
+                            displayNum: q.displayNum,
+                            discipline: disc.name,
+                            userAnswer: userAnswer || '-',
+                            correctAnswer: correctAnswer,
+                            status: status
+                        });
+                    });
+
+                    results.disciplineStats[disc.name] = discStats;
+                });
+
+                return results;
+            },
+        };
+
+        // =========================================================================
+        // MÓDULO 3: UI_RENDERER (Renderização da Interface e Interação)
+        // =========================================================================
+        APP.UI_RENDERER = {
+            // Renderiza o módulo de questionário
+            renderQuizView: function() {
+                const configModule = document.getElementById('config-module');
+                const quizModule = document.getElementById('quiz-module');
+                const questionsList = document.getElementById('questions-list');
+                const disciplineTitle = document.getElementById('quiz-discipline-title');
+
+                configModule.classList.add('hidden');
+                quizModule.classList.remove('hidden');
+                questionsList.innerHTML = ''; // Limpa a lista anterior
+
+                APP.state.quizData.disciplines.forEach(disc => {
+                    // Título da Disciplina
+                    const discHeader = document.createElement('div');
+                    discHeader.className = 'mt-6 mb-4 p-3 bg-indigo-100 rounded-lg shadow-sm';
+                    discHeader.innerHTML = `<h3 class="text-xl font-bold text-indigo-800">${disc.name}</h3>`;
+                    questionsList.appendChild(discHeader);
+
+                    disc.questions.forEach(q => {
+                        const questionElement = APP.UI_RENDERER.createQuestionCard(q);
+                        questionsList.appendChild(questionElement);
+                    });
+                });
+
+                disciplineTitle.textContent = `Questionário Pronto: ${APP.state.quizData.disciplines.map(d => d.name).join(', ')}`;
+                APP.QUIZ_MANAGER.updateStatus(); // Atualiza o status inicial
+            },
+
+            // Cria o card de uma questão
+            createQuestionCard: function(question) {
+                const card = document.createElement('div');
+                // Usa o ID Interno
+                card.id = `q-${question.internalId}`; 
+                card.className = 'p-5 mb-6 border border-gray-200 rounded-lg bg-white shadow-md';
+
+                // Usa o displayNum (número do Markdown) para exibir ao usuário
+                let htmlContent = `<div class="font-semibold text-gray-800 mb-3">Questão ${question.displayNum}: ${question.title}</div>`;
+
+                if (question.text) {
+                    htmlContent += `<div class="mb-3 p-3 border-l-4 border-primary bg-indigo-50 text-gray-600 italic text-sm"><strong>Texto:</strong> ${question.text}</div>`;
+                }
+
+                htmlContent += `<p class="mb-4 font-medium text-gray-700">${question.enunciated}</p>`;
+                htmlContent += '<div class="options-container space-y-2">';
+
+                question.options.forEach(opt => {
+                    // Usa o ID Interno para o name do radio button (grupo único)
+                    const radioName = `q${question.internalId}`;
+                    const optionId = `q${question.internalId}_opt${opt.id}`;
+                    
+                    // Verifica se a resposta já foi dada (útil para re-renderizações futuras)
+                    const isChecked = APP.state.userAnswers[question.internalId] === opt.id ? 'checked' : '';
+
+                    htmlContent += `
+                        <input type="radio" id="${optionId}" name="${radioName}" value="${opt.id}" class="hidden" ${isChecked}
+                               onclick="APP.QUIZ_MANAGER.saveAnswer('${question.internalId}', '${opt.id}')">
+                        <label for="${optionId}" class="option-label block p-3 border border-gray-300 rounded-md transition-colors duration-200 flex items-start">
+                            <span class="font-bold mr-3 text-primary">${opt.id}</span>
+                            <span>${opt.text}</span>
+                        </label>
+                    `;
+                });
+
+                htmlContent += '</div>';
+                card.innerHTML = htmlContent;
+                return card;
+            },
+
+            // Renderiza o módulo de resultados/dashboard
+            renderResultsView: function(results) {
+                const quizModule = document.getElementById('quiz-module');
+                const resultsModule = document.getElementById('results-module');
+                const summaryDiv = document.getElementById('results-summary');
+                const questionsList = document.getElementById('questions-list');
+                const gabaritoTableContainer = document.getElementById('gabarito-table-container');
+                const reviewContainer = document.getElementById('answer-review');
+
+                quizModule.classList.add('hidden');
+                resultsModule.classList.remove('hidden');
+
+                // 1. Renderiza o resumo
+                summaryDiv.innerHTML = `
+                    <div class="p-4 rounded-xl bg-primary text-white shadow-lg">
+                        <div class="text-4xl font-bold">${results.totalQuestions}</div>
+                        <div class="text-sm font-medium">Total de Questões</div>
+                    </div>
+                    <div class="p-4 rounded-xl bg-success text-white shadow-lg">
+                        <div class="text-4xl font-bold">${results.totalCorrect}</div>
+                        <div class="text-sm font-medium">Acertos</div>
+                    </div>
+                    <div class="p-4 rounded-xl bg-danger text-white shadow-lg">
+                        <div class="text-4xl font-bold">${results.totalIncorrect + results.totalUnanswered}</div>
+                        <div class="text-sm font-medium">Erros/Não Respondidas</div>
+                    </div>
+                `;
+
+                // 2. Destrói e Recria os Gráficos
+                APP.REPORT_GENERATOR.destroyCharts();
+                APP.REPORT_GENERATOR.renderCharts(results);
+
+                // 3. Exibe o gabarito e o feedback nas questões
+                questionsList.querySelectorAll('input[type="radio"]').forEach(input => input.disabled = true); // Desabilita inputs
+                questionsList.querySelectorAll('.option-label').forEach(label => label.classList.remove('option-label')); // Remove efeito hover
+
+                APP.state.quizData.disciplines.forEach(disc => {
+                    disc.questions.forEach(q => {
+                        const internalId = q.internalId;
+                        const card = document.getElementById(`q-${internalId}`);
+                        if (!card) return;
+
+                        const userAnswer = APP.state.userAnswers[internalId];
+                        const correctAnswer = APP.state.quizData.gabarito[internalId];
+
+                        // Adiciona classe de status ao card
+                        const statusClass = (userAnswer === correctAnswer) ? 'question-correct' : 'question-incorrect';
+                        card.classList.add(statusClass);
+
+                        // Aplica feedback visual nas opções
+                        card.querySelectorAll('label').forEach(label => {
+                            const optId = label.querySelector('span:first-child').textContent.trim();
+
+                            if (optId === correctAnswer) {
+                                label.classList.add('is-correct');
+                                label.insertAdjacentHTML('beforeend', '<span class="ml-2 text-success font-bold">(Gabarito)</span>');
+                            }
+
+                            if (userAnswer && optId === userAnswer) {
+                                label.classList.add('is-selected');
+                                if (userAnswer !== correctAnswer) {
+                                    label.insertAdjacentHTML('beforeend', '<span class="ml-2 text-danger font-bold">(Sua Resposta)</span>');
+                                } else {
+                                     label.insertAdjacentHTML('beforeend', '<span class="ml-2 text-success font-bold">(Correto)</span>');
+                                }
+                            }
+                        });
+                    });
+                });
+                
+                // 4. Renderiza a Tabela de Gabarito
+                APP.UI_RENDERER.renderAnswerReviewTable(results.questionReview);
+
+                // 5. Mover a lista de questões revisadas para o final
+                // Limpa título antigo se existir (para evitar duplicação no reset)
+                const oldTitle = reviewContainer.querySelector('#review-title');
+                if(oldTitle) oldTitle.remove();
+
+                const questionsReviewTitle = document.createElement('h3');
+                questionsReviewTitle.id = 'review-title'; // ID para facilitar a remoção no reset
+                questionsReviewTitle.className = 'text-2xl font-bold mt-12 mb-4 text-gray-700 border-b pb-2';
+                questionsReviewTitle.textContent = 'Revisão Detalhada das Questões';
+                reviewContainer.appendChild(questionsReviewTitle);
+                // Move a lista de questões já formatada para o final da página de resultados
+                reviewContainer.appendChild(questionsList);
+            },
+            
+            // Renderiza a tabela de revisão de respostas
+            renderAnswerReviewTable: function(questionReview) {
+                const container = document.getElementById('gabarito-table-container');
+                let tableHtml = `
+                    <table class="min-w-full divide-y divide-gray-200 bg-white rounded-lg shadow-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Disciplina</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Sua Resposta</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Gabarito</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <!-- NOVA COLUNA PARA AÇÕES DA IA -->
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                `;
+
+                questionReview.forEach((review, index) => {
+                    let statusText, statusClass;
+                    let actionCell = '<td class="px-6 py-4 whitespace-nowrap text-sm"></td>'; // Célula vazia por padrão
+
+                    switch (review.status) {
+                        case 'correct':
+                            statusText = 'Correto';
+                            statusClass = 'status-correct';
+                            break;
+                        case 'incorrect':
+                            statusText = 'Incorreto';
+                            statusClass = 'status-incorrect';
+                            // Adiciona o botão de explicação
+                            actionCell = `
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-left">
+                                    <button 
+                                        onclick="APP.GEMINI_HELPER.handleExplanationClick('${review.internalId}')"
+                                        class="px-3 py-1 bg-indigo-100 text-indigo-700 font-semibold rounded-full text-xs shadow-sm hover:bg-indigo-200 transition-all duration-150"
+                                        title="Explicar por que errei">
+                                        ✨ Explicar Erro
+                                    </button>
+                                </td>
+                            `;
+                            break;
+                        default:
+                            statusText = 'Não Respondido';
+                            statusClass = 'status-unanswered';
+                            break;
+                    }
+
+                    tableHtml += `
+                        <tr class="${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-indigo-50 transition duration-150">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${review.displayNum}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${review.discipline}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-gray-900 ${review.status === 'incorrect' ? 'bg-red-100 rounded' : (review.status === 'correct' ? 'bg-green-100 rounded' : '')}">${review.userAnswer}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-success">${review.correctAnswer}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm ${statusClass}">
+                                <span class="inline-flex px-2 text-xs leading-5 font-semibold rounded-full ${review.status === 'correct' ? 'bg-success/20 text-success' : (review.status === 'incorrect' ? 'bg-danger/20 text-danger' : 'bg-gray-200 text-gray-600')}">
+                                    ${statusText}
+                                </span>
+                            </td>
+                            <!-- CÉLULA DE AÇÃO INSERIDA AQUI -->
+                            ${actionCell}
+                        </tr>
+                    `;
+                });
+
+                tableHtml += `
+                        </tbody>
+                    </table>
+                `;
+                container.innerHTML = tableHtml;
+            },
+
+            // Exibe uma mensagem flutuante
+            showMessage: function(message, type = 'info', duration = 3000) {
+                const box = document.getElementById('message-box');
+                box.textContent = message;
+                let bgColor = 'bg-gray-900';
+                if (type === 'success') bgColor = 'bg-success';
+                if (type === 'danger') bgColor = 'bg-danger';
+                if (type === 'info') bgColor = 'bg-info';
+
+                box.className = `fixed bottom-4 right-4 p-3 ${bgColor} text-white rounded-lg shadow-xl transition-opacity duration-300 opacity-100 pointer-events-auto`;
+
+                setTimeout(() => {
+                    box.classList.remove('opacity-100');
+                    box.classList.add('opacity-0');
+                }, duration);
+            },
+
+            // Reseta a aplicação para o estado inicial
+            resetApp: function() {
+                // Move a lista de questões de volta para o módulo de quiz
+                const questionsList = document.getElementById('questions-list');
+                const quizModule = document.getElementById('quiz-module');
+                // Insere antes do status e do botão de finalizar
+                quizModule.insertBefore(questionsList, document.getElementById('quiz-status')); 
+
+                document.getElementById('markdown-input').value = '';
+                document.getElementById('config-module').classList.remove('hidden');
+                document.getElementById('quiz-module').classList.add('hidden');
+                document.getElementById('results-module').classList.add('hidden');
+                APP.state.quizData = null;
+                APP.state.userAnswers = {};
+                APP.REPORT_GENERATOR.destroyCharts();
+                // Limpa a tabela de gabarito
+                document.getElementById('gabarito-table-container').innerHTML = '';
+                // Limpa o título da revisão detalhada
+                const reviewContainer = document.getElementById('answer-review');
+                const title = reviewContainer.querySelector('#review-title');
+                if (title) {
+                    reviewContainer.removeChild(title);
+                }
+
+                APP.UI_RENDERER.showMessage('Aplicação resetada. Pronto para um novo questionário!', 'info');
+            },
+
+            // Insere o template de exemplo na caixa de texto
+            insertTemplate: function() {
+                const template = `
+## Disciplina: Língua Portuguesa
+
+### Questão 1: Análise e Interpretação de Textos
+**Texto:** "A urbanização acelerada no Brasil tem provocado uma série de desafios para a administração pública, especially no que tange à fiscalização de edificações e loteamentos. Com o crescimento desordenado das cidades, a atuação dos fiscais torna-se crucial para garantir que as normas urbanísticas sejam respeitadas, minimizando riscos à população e ao meio ambiente."
+
+**Enunciado:** Qual é a ideia central do texto?
+
+- A. A urbanização acelerada facilita a administração pública.
+- B. A atuação dos fiscais é secundária no crescimento das cidades.
+- C. O crescimento desordenado das cidades aumenta a necessidade de fiscalização.
+- D. As normas urbanísticas provocam desafios na urbanização.
+
+### Questão 2: Análise e Interpretação de Textos
+**Texto:** "Embora a fiscalização seja uma ferramenta essencial para o controle urbano, muitas vezes enfrenta barreiras como a falta de recursos e a resistência de proprietários irregulares. Contudo, é através de uma argumentação sólida e da aplicação coerente das leis que os fiscais conseguem legitimar suas ações."
+
+**Enunciado:** Identifique o mecanismo de coesão utilizado entre as orações no trecho "Embora a fiscalização seja uma ferramenta essencial para o controle urbano, muitas vezes enfrenta barreiras...":
+
+- A. Adversativo.
+- B. Concessivo.
+- C. Conclusivo.
+- D. Explicativo.
+
+### Questão 3: Gramática e Semântica
+**Enunciado:** Na frase "Os fiscais, que são capacitados para lidar com irregularidades, atuam diligentemente.", a oração destacada é:
+
+- A. Subordinada adjetiva restritiva.
+- B. Coordenada assindética.
+- C. Subordinada adjetiva explicativa.
+- D. Coordenada sindética.
+
+---
+
+## Disciplina: Direito Administrativo
+
+### Questão 4: Atos Administrativos
+**Enunciado:** Qual dos atributos abaixo é considerado inerente ao poder de polícia, permitindo que a administração imponha obrigações coercitivas sem prévia autorização judicial?
+
+- A. Presunção de Legitimidade.
+- B. Imperatividade.
+- B. Tipicidade.
+- D. Autoexecutoriedade.
+
+### Questão 5: Princípios Constitucionais
+**Enunciado:** O princípio que exige que todo ato da administração pública seja divulgado para conhecimento geral, salvo exceções previstas em lei, é o da:
+
+- A. Legalidade.
+- B. Impessoalidade.
+- C. Publicidade.
+- D. Eficiência.
+
+---
+
+## Gabarito
+
+### Língua Portuguesa
+#### Questão 1: C
+#### Questão 2: B
+#### Questão 3: C
+
+### Direito Administrativo
+#### Questão 4: D
+#### Questão 5: C
+                `;
+                document.getElementById('markdown-input').value = template.trim();
+                // Habilita o botão após inserir o template
+                document.getElementById('load-quiz-btn').disabled = false;
+            }
+        };
+
+
+        // =========================================================================
+        // MÓDULO 4: REPORT_GENERATOR (Geração de Gráficos e Exportação)
+        // =========================================================================
+        APP.REPORT_GENERATOR = {
+            // Destrói todas as instâncias de gráficos para evitar duplicação
+            destroyCharts: function() {
+                APP.state.chartInstances.forEach(chart => chart.destroy());
+                APP.state.chartInstances = [];
+                document.getElementById('discipline-details').innerHTML = `<h3 class="text-2xl font-bold mb-4 text-gray-700">Detalhes por Questão</h3>`; // Limpa detalhes
+            },
+
+            // Renderiza os gráficos principais e de detalhe
+            renderCharts: function(results) {
+                // 1. Gráfico Global de Acertos/Erros
+                const globalCtx = document.getElementById('global-chart').getContext('2d');
+                const globalChart = new Chart(globalCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Acertos', 'Erros', 'Não Respondidas'],
+                        datasets: [{
+                            data: [results.totalCorrect, results.totalIncorrect, results.totalUnanswered],
+                            backgroundColor: ['#10b981', '#ef4444', '#9ca3af'],
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: { 
+                        responsive: true, 
+                        maintainAspectRatio: false,
+                        animation: false // <-- CORREÇÃO: Desabilita animação
+                    }
+                });
+                APP.state.chartInstances.push(globalChart);
+
+                // 2. Gráfico de Desempenho por Disciplina
+                const disciplineNames = Object.keys(results.disciplineStats);
+                const disciplineScores = disciplineNames.map(name => {
+                    const stats = results.disciplineStats[name];
+                    return (stats.correct / stats.total) * 100; // Porcentagem de acerto
+                });
+
+                const disciplineCtx = document.getElementById('discipline-chart').getContext('2d');
+                const disciplineChart = new Chart(disciplineCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: disciplineNames,
+                        datasets: [{
+                            label: 'Percentual de Acerto (%)',
+                            data: disciplineScores,
+                            backgroundColor: disciplineScores.map(score => score >= 70 ? '#10b981' : (score >= 50 ? '#f59e0b' : '#ef4444')),
+                            borderRadius: 4,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: false, // <-- CORREÇÃO: Desabilita animação
+                        scales: {
+                            y: { beginAtZero: true, max: 100 }
+                        }
+                    }
+                });
+                APP.state.chartInstances.push(disciplineChart);
+
+                // 3. Gráficos de Detalhe por Questão (Barra)
+                const detailsContainer = document.getElementById('discipline-details');
+                const chartRow = document.createElement('div');
+                chartRow.className = 'grid grid-cols-1 md:grid-cols-2 gap-8 mt-6';
+
+                // --- CORREÇÃO: Passar 1 - Criar e anexar HTML ---
+                // Primeiro, criamos todos os elementos de tela e os anexamos ao DOM.
+                disciplineNames.forEach((discName, index) => {
+                    const chartElement = document.createElement('div');
+                    chartElement.className = 'bg-white p-4 rounded-lg shadow-md border border-gray-100';
+                    chartElement.innerHTML = `<h4 class="text-lg font-semibold mb-3 text-gray-700">${discName} (Acertos por Questão)</h4><div class="h-64 w-full"><canvas id="detail-chart-${index}"></canvas></div>`;
+                    chartRow.appendChild(chartElement);
+                });
+                
+                // Anexa a linha (com todos os canvas) ao documento
+                detailsContainer.appendChild(chartRow);
+
+                // --- CORREÇÃO: Passar 2 - Desenhar nos gráficos ---
+                // Agora que os <canvas> estão no DOM, podemos obter o contexto
+                disciplineNames.forEach((discName, index) => {
+                    const stats = results.disciplineStats[discName];
+                    const questionLabels = APP.state.quizData.disciplines.find(d => d.name === discName).questions.map(q => `Q${q.displayNum}`);
+                    const questionData = APP.state.quizData.disciplines.find(d => d.name === discName).questions.map(q => {
+                        return stats.questionDetails[q.internalId] === 'correct' ? 1 : 0;
+                    });
+
+                    // Esta linha agora funcionará, pois 'detail-chart-index' existe no DOM
+                    const detailCtx = document.getElementById(`detail-chart-${index}`).getContext('2d');
+                    const detailChart = new Chart(detailCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: questionLabels,
+                            datasets: [{
+                                label: 'Status (1=Acerto, 0=Erro)',
+                                data: questionData,
+                                backgroundColor: questionData.map(d => d === 1 ? '#10b981' : '#ef4444'),
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            animation: false, // <-- CORREÇÃO: Desabilita animação
+                            scales: {
+                                y: { min: 0, max: 1, ticks: { stepSize: 1 } },
+                                x: { grid: { display: false } }
+                            }
+                        }
+                    });
+                    APP.state.chartInstances.push(detailChart);
+                });
+            },
+
+            // Função auxiliar para substituir o canvas de gráficos por imagens estáticas
+            _replaceCanvasesWithImages: function(el) {
+                APP.state.chartInstances.forEach(chartInstance => {
+                    const originalCanvas = chartInstance.canvas;
+                    // Busca o canvas *dentro* do elemento clonado 'el'
+                    const clonedCanvas = el.querySelector(`#${originalCanvas.id}`); 
+                    
+                    if (clonedCanvas) {
+                        try {
+                            const img = document.createElement('img');
+                            // Obtém a imagem Base64 do canvas original (estável, pois a animação está desabilitada)
+                            img.src = originalCanvas.toDataURL('image/png'); 
+                            img.style.width = '100%'; // Garante que a imagem estática preencha o container
+                            
+                            // Substitui o canvas inerte no clone pela imagem
+                            clonedCanvas.parentNode.replaceChild(img, clonedCanvas);
+                        } catch (e) {
+                            console.error("Falha ao converter Chart.js para imagem:", e);
+                        }
+                    }
+                });
+            },
+
+            // Exportação do dashboard como PDF ou PNG
+            exportReport: async function(format) {
+                APP.UI_RENDERER.showMessage(`Gerando relatório em ${format.toUpperCase()}... Por favor, aguarde.`, 'info');
+
+                // Elementos a serem capturados
+                const appContainer = document.getElementById('app-container'); // Container principal
+                const dashboardContentEl = document.getElementById('dashboard-content');
+                const reviewTableEl = document.getElementById('answer-review');
+                
+                // Variáveis A4 em MM (padrão)
+                const A4_WIDTH_MM = 210;
+                const A4_HEIGHT_MM = 297;
+                const MARGIN = 10; // Margem de 10mm em todos os lados
+                const printableWidth = A4_WIDTH_MM - (2 * MARGIN);
+                const printableHeight = A4_HEIGHT_MM - (2 * MARGIN); // 297 - 20 = 277
+
+                // --- 1. Preparação para Captura (Clone Único) ---
+                const captureWrapper = document.createElement('div');
+                captureWrapper.style.width = '1000px'; 
+                captureWrapper.style.padding = '0';
+                captureWrapper.style.position = 'absolute';
+                captureWrapper.style.left = '-9999px';
+                captureWrapper.style.background = '#ffffff'; 
+                document.body.appendChild(captureWrapper);
+                
+                try {
+                    // --- 2. Captura do Dashboard (Conteúdo da Página 1) ---
+                    const dashClone = dashboardContentEl.cloneNode(true);
+                    captureWrapper.appendChild(dashClone);
+                    
+                    // Substitui os canvas no clone pelos dados de imagem estática
+                    APP.REPORT_GENERATOR._replaceCanvasesWithImages(dashClone);
+                    const dashboardCanvas = await html2canvas(dashClone, { scale: 2, backgroundColor: '#ffffff', logging: false });
+                    captureWrapper.removeChild(dashClone);
+
+                    // --- 3. Captura da Tabela de Gabarito (Conteúdo das Páginas 2+) ---
+                    const reviewClone = reviewTableEl.cloneNode(true);
+                    captureWrapper.appendChild(reviewClone);
+                    const reviewTableCanvas = await html2canvas(reviewClone, { scale: 2, backgroundColor: '#ffffff', logging: false });
+                    document.body.removeChild(captureWrapper);
+
+                    // --- 4. Geração do PDF ---
+                    if (format === 'pdf') {
+                        const { jsPDF } = window.jspdf;
+                        const pdf = new jsPDF('p', 'mm', 'a4');
+
+                        // --- Página 1: Dashboard ---
+                        const dashImgData = dashboardCanvas.toDataURL('image/jpeg', 1.0);
+                        const dashImgHeightMM = (dashboardCanvas.height * printableWidth) / dashboardCanvas.width;
+
+                        // Título da Página 1
+                        pdf.setFontSize(16);
+                        pdf.setTextColor(79, 70, 229); // Cor primary
+                        pdf.text("Dashboard de Avaliação de Questionário", A4_WIDTH_MM / 2, MARGIN + 3, { align: 'center' });
+                        pdf.addImage(dashImgData, 'JPEG', MARGIN, MARGIN + 8, printableWidth, dashImgHeightMM);
+                        
+                        // --- Paginação Inteligente ---
+                        
+                        // Posição Y onde o dashboard terminou (Margem + Título + Altura_Imagem)
+                        const yPosAfterDash = (MARGIN + 8 + dashImgHeightMM);
+                        
+                        // Espaço restante na Página 1 (Altura_Total - Posição_Final - Margem_Inferior)
+                        const spaceLeftOnPage1 = A4_HEIGHT_MM - yPosAfterDash - MARGIN;
+
+                        let yPositionOnPDF; // Posição Y inicial para o Gabarito
+                        const MIN_SPACE_TO_START_MM = 25; // Exigir pelo menos 2.5cm para começar na P1
+                        
+                        if (spaceLeftOnPage1 < MIN_SPACE_TO_START_MM) {
+                            // Não há espaço suficiente, forçar quebra de página
+                            pdf.addPage();
+                            yPositionOnPDF = MARGIN; // Começa no topo da Página 2
+                        } else {
+                            // Há espaço, começar na Página 1
+                            yPositionOnPDF = yPosAfterDash + 5; // Começa após o dashboard + 5mm de padding
+                        }
+
+                        // --- Início do Loop do Gabarito (Pág 1 ou 2) ---
+                        const reviewImgData = reviewTableCanvas.toDataURL('image/jpeg', 1.0);
+                        const reviewImgHeightMM = (reviewTableCanvas.height * printableWidth) / reviewTableCanvas.width;
+                        
+                        let heightLeft = reviewImgHeightMM; // Altura da imagem de origem restante
+                        let isFirstReviewPage = true;
+
+                        while (heightLeft > 0) {
+                            
+                            // Calcula o espaço restante nesta página (Pode ser P1 ou P2)
+                            // (Altura imprimível) - (Posição Y atual - Margem superior)
+                            let spaceLeftOnPage = printableHeight - (yPositionOnPDF - MARGIN);
+                            
+                            const TITLE_HEIGHT_MM = 8; // Altura do título em mm
+                            
+                            // Adiciona o título (apenas uma vez)
+                            if (isFirstReviewPage) {
+                                // Se o título não couber, pule a página
+                                if (TITLE_HEIGHT_MM > spaceLeftOnPage) {
+                                    pdf.addPage();
+                                    yPositionOnPDF = MARGIN;
+                                    spaceLeftOnPage = printableHeight; // Espaço total na nova página
+                                }
+                                
+                                pdf.setFontSize(16);
+                                pdf.setTextColor(55, 65, 81);
+                                pdf.text("Gabarito Detalhado e Revisão de Respostas", A4_WIDTH_MM / 2, yPositionOnPDF + 3, { align: 'center' });
+                                yPositionOnPDF += TITLE_HEIGHT_MM; // Move a posição Y para baixo
+                                isFirstReviewPage = false;
+                            }
+                            
+                            // Recalcula o espaço restante *após* o título
+                            const spaceLeftForSlice = printableHeight - (yPositionOnPDF - MARGIN);
+
+                            // Calcula a altura da fatia (slice)
+                            const sliceHeight = Math.min(spaceLeftForSlice, heightLeft);
+
+                            if (sliceHeight <= 0) {
+                                 // Segurança para evitar loop infinito
+                                 console.error("Erro de cálculo de fatia (<= 0), quebrando loop.");
+                                 break; 
+                            }
+
+                            // Calcula o offset (Y) na imagem de *origem*
+                            const ySliceOffset = reviewImgHeightMM - heightLeft;
+
+                            // Adiciona a fatia da imagem
+                            pdf.addImage(
+                                reviewImgData,
+                                'JPEG',
+                                MARGIN,          // X-Pos
+                                yPositionOnPDF,  // Y-Pos
+                                printableWidth,
+                                reviewImgHeightMM, // Altura total (para scaling)
+                                null, 'NONE', 0, ySliceOffset
+                            );
+
+                            // Atualiza alturas
+                            heightLeft -= sliceHeight;
+                            yPositionOnPDF += sliceHeight;
+
+                            // Adiciona nova página se necessário
+                            if (heightLeft > 0.01) { // Tolerância
+                                pdf.addPage();
+                                yPositionOnPDF = MARGIN; // Reseta
+                            }
+                        }
+                        
+                        pdf.save('relatorio_quiz.pdf');
+                        APP.UI_RENDERER.showMessage('Exportação PDF concluída!', 'success');
+                    } 
+                    // --- 5. Geração do PNG (Simples, Captura do Container de Resultados) ---
+                    else if (format === 'png') {
+                        const reportContainer = appContainer; // Usa o appContainer definido no início
+
+                        const finalPngWrapper = document.createElement('div');
+                        finalPngWrapper.innerHTML = `<h1 class="text-4xl font-extrabold text-gray-900 mb-8 text-center text-primary">Gerenciador de Avaliações Monolito</h1>`;
+                        finalPngWrapper.style.width = reportContainer.scrollWidth + 'px'; 
+                        finalPngWrapper.style.padding = '32px';
+                        finalPngWrapper.style.background = '#ffffff';
+                        
+                        const fullContentClone = document.getElementById('results-module').cloneNode(true);
+                        // O clone precisa ter os gráficos substituídos também
+                        APP.REPORT_GENERATOR._replaceCanvasesWithImages(fullContentClone); 
+                        
+                        finalPngWrapper.appendChild(fullContentClone);
+                        document.body.appendChild(finalPngWrapper);
+
+                        const pngCanvas = await html2canvas(finalPngWrapper, { scale: 2, backgroundColor: '#ffffff', logging: false });
+                        document.body.removeChild(finalPngWrapper);
+
+
+                        const imgData = pngCanvas.toDataURL('image/png');
+                        const link = document.createElement('a');
+                        link.href = imgData;
+                        link.download = 'relatorio_quiz.png';
+                        link.click();
+                        APP.UI_RENDERER.showMessage('Exportação PNG concluída!', 'success');
+                    }
+
+                } catch (error) {
+                    console.error("Erro durante a exportação:", error);
+                    APP.UI_RENDERER.showMessage('Erro ao exportar o relatório.', 'danger');
+                    // Garante que o captureWrapper seja removido em caso de erro
+                    if (document.body.contains(captureWrapper)) {
+                        document.body.removeChild(captureWrapper);
+                    }
+                }
+            }
+        };
+
+        // =========================================================================
+        // MÓDULO 5: GEMINI_HELPER (Integração com a IA)
+        // =========================================================================
+        APP.GEMINI_HELPER = {
+            // Constante da API (API Key é deixada em branco, conforme instruído)
+            API_URL: `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=`,
+
+            // Mostra ou esconde o modal
+            _toggleModal: function(show) {
+                const modal = document.getElementById('gemini-modal');
+                const contentDiv = document.getElementById('gemini-modal-content');
+                const loadingDiv = document.getElementById('gemini-loading');
+                
+                if (show) {
+                    // Reseta o estado de loading
+                    loadingDiv.classList.remove('hidden'); // Mostra o loading
+                    contentDiv.classList.add('hidden');   // Esconde o conteúdo
+                    contentDiv.innerHTML = '';             // Limpa conteúdo antigo
+                    modal.classList.remove('hidden');
+                } else {
+                    modal.classList.add('hidden');
+                }
+            },
+            
+            // Função para formatar markdown simples para HTML
+            _formatMarkdown: function(text) {
+                if (!text) return '';
+                // 1. Negrito (**texto**)
+                let html = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                // 2. Itálico (*texto*)
+                html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+                // 3. Quebra de linha (\n)
+                html = html.replace(/\n/g, '<br>');
+                return html;
+            },
+
+            // Ponto de entrada: Chamado pelo botão "Explicar Erro"
+            handleExplanationClick: async function(internalId) {
+                APP.UI_RENDERER.showMessage('Buscando explicação da IA...', 'info');
+                APP.GEMINI_HELPER._toggleModal(true); // Mostra o modal com "loading"
+
+                try {
+                    // 1. Encontrar a questão completa no estado
+                    const question = APP.state.quizData.disciplines
+                        .flatMap(d => d.questions)
+                        .find(q => q.internalId === internalId);
+                    
+                    if (!question) {
+                        throw new Error("Questão não encontrada no estado.");
+                    }
+
+                    // 2. Encontrar as respostas
+                    const userAnswerId = APP.state.userAnswers[internalId];
+                    const correctAnswerId = APP.state.quizData.gabarito[internalId];
+
+                    // 3. Gerar o prompt
+                    const prompt = APP.GEMINI_HELPER._buildPrompt(question, userAnswerId, correctAnswerId);
+                    
+                    // 4. Chamar a API
+                    const explanation = await APP.GEMINI_HELPER._fetchExplanation(prompt);
+
+                    // 5. Exibir o resultado
+                    const contentDiv = document.getElementById('gemini-modal-content');
+                    const loadingDiv = document.getElementById('gemini-loading');
+                    
+                    // Converte quebras de linha e markdown simples da IA para HTML
+                    contentDiv.innerHTML = APP.GEMINI_HELPER._formatMarkdown(explanation);
+                    
+                    // Esconde o loading e mostra o conteúdo
+                    loadingDiv.classList.add('hidden');
+                    contentDiv.classList.remove('hidden');
+
+
+                } catch (error) {
+                    console.error("Erro ao buscar explicação da Gemini:", error);
+                    const contentDiv = document.getElementById('gemini-modal-content');
+                    const loadingDiv = document.getElementById('gemini-loading');
+
+                    contentDiv.innerHTML = `<p class="text-danger font-semibold">Desculpe, não foi possível obter a explicação no momento. Tente novamente mais tarde.</p>`;
+                    
+                    // Esconde o loading e mostra a mensagem de erro
+                    loadingDiv.classList.add('hidden');
+                    contentDiv.classList.remove('hidden');
+                }
+            },
+
+            // Constrói o prompt para a API
+            _buildPrompt: function(question, userAnswerId, correctAnswerId) {
+                const systemPrompt = "Você é um tutor especialista em concursos e avaliações. Sua tarefa é explicar por que uma resposta está errada e por que a resposta correta é a correta. Seja claro, didático e conciso, focando no conceito central da questão. Responda em Português. Use markdown simples (negrito com ** e itálico com *) para destacar pontos-chave.";
+                
+                const findOptionText = (id) => question.options.find(opt => opt.id === id)?.text || "N/A";
+                
+                const userAnswerText = findOptionText(userAnswerId);
+                const correctAnswerText = findOptionText(correctAnswerId);
+
+                const userQuery = `
+Contexto da Questão:
+Disciplina: ${question.discipline}
+Enunciado: ${question.enunciated}
+${question.text ? `Texto de Apoio: ${question.text}` : ''}
+
+Opções:
+${question.options.map(opt => `- ${opt.id}. ${opt.text}`).join('\n')}
+
+Análise:
+- O usuário respondeu: "${userAnswerText}" (Alternativa ${userAnswerId})
+- A resposta correta é: "${correctAnswerText}" (Alternativa ${correctAnswerId})
+
+Por favor, explique em um parágrafo curto, mas completo, por que a resposta do usuário estava incorreta e por que a resposta correta é a certa.
+                `;
+
+                return { systemPrompt, userQuery };
+            },
+
+            // Lógica de fetch com retry (Exponential Backoff)
+            _fetchExplanation: async function(promptData, retries = 3, delay = 1000) {
+                // A API Key é deixada em branco; será fornecida pelo ambiente
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+                const payload = {
+                    contents: [{ parts: [{ text: promptData.userQuery }] }],
+                    systemInstruction: {
+                        parts: [{ text: promptData.systemPrompt }]
+                    },
+                };
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        // Se a resposta não for OK, trata como um erro para retry
+                        throw new Error(`API Error: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                    if (text) {
+                        return text;
+                    } else {
+                        // Se a resposta for OK mas não tiver texto (ex: safety settings)
+                        throw new Error("A API retornou uma resposta vazia.");
+                    }
+
+                } catch (error) {
+                    if (retries > 0) {
+                        // Não loga o retry no console, conforme instruído
+                        await new Promise(res => setTimeout(res, delay));
+                        // Chama recursivamente com backoff
+                        return APP.GEMINI_HELPER._fetchExplanation(promptData, retries - 1, delay * 2);
+                    } else {
+                        // Se acabarem os retries, joga o erro
+                        console.error("Erro final da API após retries:", error);
+                        throw error; // Propaga o erro para o handleExplanationClick
+                    }
+                }
+            }
+        };
+
+
+        // =========================================================================
+        // Inicialização e Event Listeners (Refatorados para resolver o TypeError)
+        // =========================================================================
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const markdownInput = document.getElementById('markdown-input');
+            const loadBtn = document.getElementById('load-quiz-btn');
+
+            // 1. Configurar Listeners para os botões de Input e Controle
+            document.getElementById('load-template-btn').addEventListener('click', APP.UI_RENDERER.insertTemplate);
+            loadBtn.addEventListener('click', APP.QUIZ_MANAGER.loadQuiz);
+            document.getElementById('finish-quiz-btn').addEventListener('click', APP.QUIZ_MANAGER.finishQuiz);
+            document.getElementById('reset-app-btn').addEventListener('click', APP.UI_RENDERER.resetApp);
+
+            // 2. Configurar Listeners para Exportação (Corrige o TypeError)
+            document.getElementById('export-pdf-btn').addEventListener('click', () => {
+                APP.REPORT_GENERATOR.exportReport('pdf');
+            });
+            document.getElementById('export-png-btn').addEventListener('click', () => {
+                APP.REPORT_GENERATOR.exportReport('png');
+            });
+
+            // 3. Habilita/Desabilita o botão de iniciar questionário baseado no conteúdo
+            markdownInput.addEventListener('input', () => {
+                loadBtn.disabled = markdownInput.value.trim().length === 0;
+            });
+
+            // 4. Configurar Listener para fechar o Modal Gemini
+            document.getElementById('gemini-modal-close').addEventListener('click', () => {
+                APP.GEMINI_HELPER._toggleModal(false);
+            });
+
+            // 5. Insere o template inicial para demonstração
+            APP.UI_RENDERER.insertTemplate();
+        });
+    </script>
+</body>
+</html>
