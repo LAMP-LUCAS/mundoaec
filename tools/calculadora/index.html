@@ -1,0 +1,314 @@
+<!DOCTYPE html><html lang="pt-BR"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Calculadora de Gasto de Energia - Mundo AEC</title><meta name="description" content="Levamos BIM e tecnologia aberta, do investidor ao usuário final, com ferramentas práticas e acessíveis."><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet"><link rel="stylesheet" href="/src/styles/global.css"><!-- Google Tag Manager --><script async src="https://www.googletagmanager.com/gtag/js?id=G-2TXXJW3QG1"></script><!-- <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){
+            dataLayer.push(arguments)
+        ;}
+        gtag('js', new Date());
+        gtag('config', 'G-2TXXJW3QG1');
+    </script> --><link rel="stylesheet" href="/_astro/calculadora.DpeKXt8d.css">
+<link rel="stylesheet" href="/_astro/autosinapi.A-a7v9D3.css"></head> <body> <header class="site-header"> <div class="container header-container"> <div class="logo"> <i class="fas fa-lightbulb"></i> <a href="/" style="color: inherit; text-decoration: none;"> <span>MUNDO AEC</span></a> </div> <nav></nav> <div class="cta-btns"> <a href="/foton" class="btn" style="zoom: 120%;">Comunidade</a> <a href="/tools" class="btn btn-outline">Ferramentas</a> <a href="/autosinapi" class="btn btn-outline">AutoSINAPI</a> </div> </div> </header> <main>  <script type="module" src="/_astro/calculadora.astro_astro_type_script_index_0_lang.Ds9P6cqp.js"></script> <section id="calculator-section"> <div class="calculator-container"> <h1 class="title">Calculadora de Gasto de Energia</h1> <p class="subtitle">Estime o custo mensal e visualize o impacto de cada aparelho.</p> <div id="calculator-form" class="form-section"> <div class="input-group"> <label for="kwh-price" class="label">Custo por kWh (R$)</label> <input type="number" id="kwh-price" value="0.75" class="input-field"> </div> <div id="appliances-container" class="appliances-list"> <div class="appliance-item"> <div class="appliance-input"> <label class="label">Aparelho</label> <select class="appliance-select input-field"></select> </div> <div class="appliance-input"> <label class="label">Potência (W)</label> <input type="number" value="150" min="0" class="input-field appliance-power"> </div> <div class="appliance-input"> <label class="label">Uso Diário (h)</label> <input type="number" value="5" min="0" class="input-field appliance-hours"> </div> <div class="appliance-input"> <label class="label">Quantidade</label> <input type="number" value="1" min="1" class="input-field appliance-quantity"> </div> <button class="remove-btn" title="Remover Aparelho">&times;</button> </div> </div> <div class="buttons-container"> <button id="add-appliance-btn" class="button button-add">
++ Adicionar Aparelho
+</button> <button id="calculate-btn" class="button button-calculate">
+Calcular Gasto
+</button> </div> </div> <div id="results" class="results-section hidden"> <h2 class="results-title">Custo Estimado</h2> <div class="cost-cards"> <div class="cost-card"> <p class="cost-label">Diário</p> <p id="daily-cost" class="cost-value">R$ 0,00</p> </div> <div class="cost-card"> <p class="cost-label">Semanal</p> <p id="weekly-cost" class="cost-value">R$ 0,00</p> </div> <div class="cost-card"> <p class="cost-label">Mensal</p> <p id="monthly-cost" class="cost-value">R$ 0,00</p> </div> <div class="cost-card"> <p class="cost-label">Anual</p> <p id="yearly-cost" class="cost-value">R$ 0,00</p> </div> </div> <div id="chart-container" class="chart-container hidden"> <h3 class="chart-title">Consumo por Aparelho (Mensal)</h3> <canvas id="consumptionChart"></canvas> </div> </div> <div id="generation-simulation" class="generation-simulation-section hidden"> <h2 class="generation-title">Simulação de Geração de Energia</h2> <div class="simulation-card solar-card"> <h3 class="simulation-subtitle">Sistema Solar Fotovoltaico</h3> <div class="simulation-grid"> <div class="simulation-item"> <p class="simulation-label">Consumo Mensal (kWh)</p> <p id="solar-kwh-monthly" class="simulation-value">0 kWh</p> </div> <div class="simulation-item"> <p class="simulation-label">Potência Recomendada</p> <p id="solar-power" class="simulation-value">0 kWp</p> </div> <div class="simulation-item"> <p class="simulation-label">Painéis (~550W)</p> <p id="solar-panels" class="simulation-value">0 unidades</p> </div> <div class="simulation-item"> <p class="simulation-label">Custo Estimado</p> <p id="solar-cost" class="simulation-value">R$ 0,00</p> </div> </div> <p class="simulation-info">Valores baseados em insolação média de 5.0 kWh/m²/dia e custo de R$ 4.500/kWp.</p> </div> <div class="simulation-card diesel-card"> <h3 class="simulation-subtitle">Gerador a Diesel</h3> <div class="simulation-grid"> <div class="simulation-item"> <p class="simulation-label">Consumo Mensal (kWh)</p> <p id="diesel-kwh-monthly" class="simulation-value">0 kWh</p> </div> <div class="simulation-item"> <p class="simulation-label">Consumo Mensal de Diesel</p> <p id="diesel-liters" class="simulation-value">0 L</p> </div> <div class="simulation-item"> <p class="simulation-label">Custo Mensal Estimado</p> <p id="diesel-cost" class="simulation-value">R$ 0,00</p> </div> </div> <p class="simulation-info">Valores baseados em consumo de 0.35 L/kWh e preço do diesel de R$ 6.50/L.</p> </div> </div> </div> <div id="message-box" class="message-overlay hidden"> <div class="message-container"> <p id="message-text" class="message-text"></p> <button id="close-message-btn" class="button button-ok">OK</button> </div> </div> </section> <script>
+        // O código JavaScript aqui é o mesmo do seu arquivo original,
+        // mas com as classes atualizadas para as novas do CSS.
+        // A lógica de cálculo permanece idêntica.
+
+        // DOM elements
+        const kwhPriceInput = document.getElementById('kwh-price');
+        const appliancesContainer = document.getElementById('appliances-container');
+        const addApplianceBtn = document.getElementById('add-appliance-btn');
+        const calculateBtn = document.getElementById('calculate-btn');
+        const resultsSection = document.getElementById('results');
+        const dailyCostEl = document.getElementById('daily-cost');
+        const weeklyCostEl = document.getElementById('weekly-cost');
+        const monthlyCostEl = document.getElementById('monthly-cost');
+        const yearlyCostEl = document.getElementById('yearly-cost');
+        const messageBox = document.getElementById('message-box');
+        const messageText = document.getElementById('message-text');
+        const closeMessageBtn = document.getElementById('close-message-btn');
+        const generationSimulationSection = document.getElementById('generation-simulation');
+        const solarKwhMonthlyEl = document.getElementById('solar-kwh-monthly');
+        const solarPowerEl = document.getElementById('solar-power');
+        const solarPanelsEl = document.getElementById('solar-panels');
+        const solarCostEl = document.getElementById('solar-cost');
+        const dieselKwhMonthlyEl = document.getElementById('diesel-kwh-monthly');
+        const dieselLitersEl = document.getElementById('diesel-liters');
+        const dieselCostEl = document.getElementById('diesel-cost');
+        const chartContainer = document.getElementById('chart-container');
+        const consumptionChartCanvas = document.getElementById('consumptionChart');
+        let consumptionChart = null; // Variable to hold the chart instance
+
+        // Common appliances data
+        const commonAppliances = [
+            { name: "Personalizado", power: 0, hours: 0 },
+            { name: "Ar-Condicionado (9000 BTU)", power: 1000, hours: 8 },
+            { name: "Geladeira (frost-free)", power: 100, hours: 24 },
+            { name: "Chuveiro Elétrico", power: 5500, hours: 0.5 },
+            { name: "Máquina de Lavar (ciclo completo)", power: 500, hours: 1 },
+            { name: "Televisão (LED 42'')", power: 120, hours: 5 },
+            { name: "Lâmpada LED (10W)", power: 10, hours: 10 },
+            { name: "Micro-ondas", power: 1200, hours: 0.2 },
+            { name: "Computador Desktop", power: 250, hours: 8 },
+            { name: "Ventilador de Teto", power: 80, hours: 8 }
+        ];
+
+        // Function to show a custom message box instead of alert()
+        function showMessage(text) {
+            messageText.textContent = text;
+            messageBox.classList.remove('hidden');
+            messageBox.classList.add('visible');
+        }
+
+        // Function to hide the message box
+        function hideMessage() {
+            messageBox.classList.add('hidden');
+            messageBox.classList.remove('visible');
+        }
+
+        closeMessageBtn.addEventListener('click', hideMessage);
+
+        // Function to populate the select dropdown with appliance options
+        function populateApplianceSelect(selectElement, applianceData) {
+            selectElement.innerHTML = '';
+            applianceData.forEach(appliance => {
+                const option = document.createElement('option');
+                option.value = appliance.name;
+                option.textContent = appliance.name;
+                selectElement.appendChild(option);
+            });
+        }
+
+        // Function to add a new appliance input block
+        function addAppliance(defaultAppliance = commonAppliances[0]) {
+            const applianceDiv = document.createElement('div');
+            applianceDiv.classList.add('appliance-item');
+            applianceDiv.innerHTML = `
+            <div class="appliance-input">
+                <label class="label">Aparelho</label>
+                <select class="appliance-select input-field"></select>
+            </div>
+            <div class="appliance-input">
+                <label class="label">Potência (W)</label>
+                <input type="number" value="${defaultAppliance.power}" min="0" class="input-field appliance-power">
+            </div>
+            <div class="appliance-input">
+                <label class="label">Uso Diário (h)</label>
+                <input type="number" value="${defaultAppliance.hours}" min="0" class="input-field appliance-hours">
+            </div>
+            <div class="appliance-input">
+                <label class="label">Quantidade</label>
+                <input type="number" value="1" min="1" class="input-field appliance-quantity">
+            </div>
+            <button class="remove-btn" title="Remover Aparelho">&times;</button>
+            `;
+            const selectElement = applianceDiv.querySelector('.appliance-select');
+            populateApplianceSelect(selectElement, commonAppliances);
+
+            const selectedOption = selectElement.querySelector(`option[value="${defaultAppliance.name}"]`);
+            if (selectedOption) {
+                selectedOption.selected = true;
+            }
+
+            appliancesContainer.appendChild(applianceDiv);
+        }
+
+        // Initial appliance
+        const firstApplianceSelect = document.querySelector('.appliance-select');
+        populateApplianceSelect(firstApplianceSelect, commonAppliances);
+        
+        const firstAppliance = commonAppliances.find(a => a.name === "Televisão (LED 42'')");
+        const firstPowerInput = document.querySelector('.appliance-power');
+        const firstHoursInput = document.querySelector('.appliance-hours');
+        firstPowerInput.value = firstAppliance.power;
+        firstHoursInput.value = firstAppliance.hours;
+        firstApplianceSelect.value = firstAppliance.name;
+
+        // Add event listener to the add appliance button
+        addApplianceBtn.addEventListener('click', () => addAppliance());
+
+        // Event delegation for appliance select and remove buttons
+        appliancesContainer.addEventListener('change', (event) => {
+            if (event.target.classList.contains('appliance-select')) {
+                const selectedName = event.target.value;
+                const selectedAppliance = commonAppliances.find(app => app.name === selectedName);
+                const parentDiv = event.target.closest('.appliance-item');
+                if (selectedAppliance) {
+                    parentDiv.querySelector('.appliance-power').value = selectedAppliance.power;
+                    parentDiv.querySelector('.appliance-hours').value = selectedAppliance.hours;
+                }
+            }
+        });
+
+        appliancesContainer.addEventListener('click', (event) => {
+            if (event.target.classList.contains('remove-btn')) {
+                if (appliancesContainer.childElementCount > 1) {
+                    event.target.closest('.appliance-item').remove();
+                } else {
+                    showMessage('Você precisa ter pelo menos um aparelho.');
+                }
+            }
+        });
+
+        // Function to create or update the pie chart
+        function updateChart(labels, data) {
+            const chartData = {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: [
+                        '#4f46e5', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e', '#ef4444',
+                        '#f97316', '#eab308', '#22c55e', '#10b981', '#06b6d4', '#0ea5e9', '#3b82f6'
+                    ],
+                    hoverOffset: 4
+                }]
+            };
+
+            const chartOptions = {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                const total = tooltipItem.dataset.data.reduce((acc, value) => acc + value, 0);
+                                const value = tooltipItem.raw;
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return ` ${tooltipItem.label}: ${value.toFixed(2)} kWh (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            };
+
+            if (consumptionChart) {
+                consumptionChart.data = chartData;
+                consumptionChart.update();
+            } else {
+                consumptionChart = new Chart(consumptionChartCanvas, {
+                    type: 'pie',
+                    data: chartData,
+                    options: chartOptions,
+                });
+            }
+            chartContainer.classList.remove('hidden');
+        }
+
+        // Function to perform generation calculations
+        function calculateGeneration(monthlyKwh) {
+            // CONSTANTS for solar calculation (simplified averages for Brazil)
+            const solarIrradiation = 5.0; // kWh/m²/dia
+            const systemEfficiency = 0.85; // 85%
+            const panelPower = 0.55; // kWp (ex: 550W)
+            const costPerKwp = 4500; // R$/kWp (ex: R$4.500)
+
+            // SOLAR CALCULATION
+            const dailyKwh = monthlyKwh / 30;
+            const requiredKwp = dailyKwh / (solarIrradiation * systemEfficiency);
+            const numberOfPanels = Math.ceil(requiredKwp / panelPower);
+            const solarInstallationCost = requiredKwp * costPerKwp;
+
+            // Display solar results
+            solarKwhMonthlyEl.textContent = `${monthlyKwh.toFixed(0)} kWh`;
+            solarPowerEl.textContent = `${requiredKwp.toFixed(2)} kWp`;
+            solarPanelsEl.textContent = `${numberOfPanels} unidades`;
+            solarCostEl.textContent = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(solarInstallationCost);
+
+            // CONSTANTS for diesel generator calculation
+            const dieselConsumptionRate = 0.35; // L/kWh
+            const dieselPrice = 6.50; // R$/L
+
+            // DIESEL CALCULATION
+            const monthlyDieselLiters = monthlyKwh * dieselConsumptionRate;
+            const monthlyDieselCost = monthlyDieselLiters * dieselPrice;
+
+            // Display diesel results
+            dieselKwhMonthlyEl.textContent = `${monthlyKwh.toFixed(0)} kWh`;
+            dieselLitersEl.textContent = `${monthlyDieselLiters.toFixed(2)} L`;
+            dieselCostEl.textContent = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(monthlyDieselCost);
+
+            generationSimulationSection.classList.remove('hidden');
+        }
+
+        // Main calculation function
+        calculateBtn.addEventListener('click', () => {
+            const kwhPrice = parseFloat(kwhPriceInput.value);
+
+            if (isNaN(kwhPrice) || kwhPrice < 0) {
+                showMessage('Por favor, insira um valor válido para o custo por kWh.');
+                return;
+            }
+
+            const appliances = document.querySelectorAll('.appliance-item');
+            let totalDailyKwh = 0;
+            let isValid = true;
+            const chartLabels = [];
+            const chartData = [];
+
+            appliances.forEach(appliance => {
+                const powerInput = appliance.querySelector('.appliance-power');
+                const hoursInput = appliance.querySelector('.appliance-hours');
+                const quantityInput = appliance.querySelector('.appliance-quantity');
+                const nameInput = appliance.querySelector('.appliance-select');
+                
+                const power = parseFloat(powerInput.value);
+                const hours = parseFloat(hoursInput.value);
+                const quantity = parseInt(quantityInput.value);
+                const name = nameInput.value;
+
+                if (isNaN(power) || power < 0 || isNaN(hours) || hours < 0 || isNaN(quantity) || quantity < 1) {
+                    showMessage('Por favor, preencha todos os campos com valores válidos e positivos.');
+                    isValid = false;
+                    return;
+                }
+
+                // Calculation: (Watts * Hours) / 1000 = kWh
+                const dailyKwh = (power * hours * quantity) / 1000;
+                totalDailyKwh += dailyKwh;
+                
+                // Add data for the chart
+                const monthlyKwh = dailyKwh * 30;
+                chartLabels.push(name);
+                chartData.push(monthlyKwh);
+            });
+
+            if (!isValid) {
+                resultsSection.classList.add('hidden');
+                generationSimulationSection.classList.add('hidden');
+                chartContainer.classList.add('hidden');
+                return;
+            }
+
+            if (totalDailyKwh > 0) {
+                const monthlyKwh = totalDailyKwh * 30; // 30 dias por mês
+                const dailyCost = totalDailyKwh * kwhPrice;
+                const weeklyCost = dailyCost * 7;
+                const monthlyCost = dailyCost * 30;
+                const yearlyCost = dailyCost * 365;
+
+                // Format and display results
+                const formatter = new Intl.NumberFormat('pt-BR', {
+                    style: 'currency',
+                    currency: 'BRL',
+                });
+
+                dailyCostEl.textContent = formatter.format(dailyCost);
+                weeklyCostEl.textContent = formatter.format(weeklyCost);
+                monthlyCostEl.textContent = formatter.format(monthlyCost);
+                yearlyCostEl.textContent = formatter.format(yearlyCost);
+
+                resultsSection.classList.remove('hidden');
+
+                // Call functions to update the chart and generation simulation
+                updateChart(chartLabels, chartData);
+                calculateGeneration(monthlyKwh);
+            } else {
+                resultsSection.classList.add('hidden');
+                generationSimulationSection.classList.add('hidden');
+                chartContainer.classList.add('hidden');
+            }
+        });
+    </script>   <!-- O conteúdo da página será injetado aqui --> </main> <footer> <div class="container"> <div class="footer-content"> <div class="footer-column"> <h3>Mundo AEC</h3> <p>Tecnologia aberta para toda a cadeia da construção. Um ecossistema integrado de soluções.</p> </div> <div class="footer-column"> <h3>Ecossistema</h3> <ul class="footer-links"> <li><a href="/autosinapi">AutoSINAPI API</a></li> <li><a href="/tools">Ferramentas Web</a></li> <li><a href="/foton">Comunidade Foton</a></li> <li><a href="https://comunidade.mundoaec.com/">Redmine Comunidade</a></li> </ul> </div> <div class="footer-column"> <h3>Desenvolvimento</h3> <ul class="footer-links"> <li><a href="https://github.com/LAMP-LUCAS/foton">Foton (GitHub)</a></li> <li><a href="https://github.com/LAMP-LUCAS/foton_cash_flow">Plugin Fluxo de Caixa</a></li> <li><a href="https://github.com/LAMP-LUCAS/autoSINAPI_API">AutoSINAPI API (GitHub)</a></li> <li><a href="https://github.com/LAMP-LUCAS">Todos os Repositórios</a></li> </ul> </div> <div class="footer-column"> <h3>Contato</h3> <ul class="footer-links"> <li><i class="fas fa-envelope"></i> contato@mundoaec.com</li> <li><i class="fab fa-github"></i> github.com/LAMP-LUCAS</li> </ul> </div> </div> <div class="copyright"> <p>&copy; 2025 Mundo AEC. Feito com ♥ por uma comunidade que acredita que o futuro da construção é aberto, integrado e acessível.</p> </div> </div> </footer> </body></html>

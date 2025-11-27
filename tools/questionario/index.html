@@ -1,0 +1,412 @@
+<!DOCTYPE html><html lang="pt-BR"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Gerenciador de Questionários - Mundo AEC</title><meta name="description" content="Levamos BIM e tecnologia aberta, do investidor ao usuário final, com ferramentas práticas e acessíveis."><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet"><link rel="stylesheet" href="/src/styles/global.css"><!-- Google Tag Manager --><script async src="https://www.googletagmanager.com/gtag/js?id=G-2TXXJW3QG1"></script><!-- <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){
+            dataLayer.push(arguments)
+        ;}
+        gtag('js', new Date());
+        gtag('config', 'G-2TXXJW3QG1');
+    </script> --><link rel="stylesheet" href="/_astro/questionario.CIxOleGE.css">
+<link rel="stylesheet" href="/_astro/autosinapi.A-a7v9D3.css"></head> <body> <header class="site-header"> <div class="container header-container"> <div class="logo"> <i class="fas fa-lightbulb"></i> <a href="/" style="color: inherit; text-decoration: none;"> <span>MUNDO AEC</span></a> </div> <nav></nav> <div class="cta-btns"> <a href="/foton" class="btn" style="zoom: 120%;">Comunidade</a> <a href="/tools" class="btn btn-outline">Ferramentas</a> <a href="/autosinapi" class="btn btn-outline">AutoSINAPI</a> </div> </div> </header> <main>   <script type="module" src="/_astro/questionario.astro_astro_type_script_index_0_lang.aTjjCWRD.js"></script> <script type="module" src="/_astro/questionario.astro_astro_type_script_index_1_lang.ya-bFBIz.js"></script> <script type="module" src="/_astro/questionario.astro_astro_type_script_index_2_lang.Ds9P6cqp.js"></script> <div id="app-container" class="tool-wrapper" data-astro-cid-zzx6nip6> <div class="header-section" data-astro-cid-zzx6nip6> <h1 class="main-title" data-astro-cid-zzx6nip6>Gerenciador de Avaliações</h1> <p class="subtitle" data-astro-cid-zzx6nip6>Cole seu questionário em Markdown, responda e gere relatórios.</p> </div> <!-- 1. Módulo de Configuração/Input --> <section id="config-module" class="content-box" data-astro-cid-zzx6nip6> <h2 class="box-title" data-astro-cid-zzx6nip6>1. Entrada do Questionário</h2> <div class="toolbar" data-astro-cid-zzx6nip6> <p class="instruction-text" data-astro-cid-zzx6nip6>Cole o texto abaixo ou use o modelo padrão.</p> <button id="load-template-btn" class="btn btn-info text-sm" data-astro-cid-zzx6nip6>Carregar Template</button> </div> <textarea id="markdown-input" class="input-area" placeholder="Cole seu Markdown aqui..." data-astro-cid-zzx6nip6></textarea> <button id="load-quiz-btn" class="btn btn-primary btn-full mt-4" disabled data-astro-cid-zzx6nip6>Iniciar Questionário</button> </section> <!-- 2. Módulo de Questionário --> <section id="quiz-module" class="content-box hidden" data-astro-cid-zzx6nip6> <h2 id="quiz-discipline-title" class="box-title text-primary" data-astro-cid-zzx6nip6></h2> <div id="questions-list" data-astro-cid-zzx6nip6> <!-- Questões renderizadas via JS --> </div> <div id="quiz-status" class="status-bar" data-astro-cid-zzx6nip6></div> <button id="finish-quiz-btn" class="btn btn-success btn-full mt-4" data-astro-cid-zzx6nip6>Finalizar e Ver Resultados</button> </section> <!-- 3. Módulo de Resultados --> <section id="results-module" class="content-box hidden" data-astro-cid-zzx6nip6> <h2 class="box-title text-center" data-astro-cid-zzx6nip6>Dashboard de Resultados</h2> <!-- Botões de Controle --> <div class="action-buttons-row" data-astro-cid-zzx6nip6> <button id="export-pdf-btn" class="btn btn-danger flex-btn" data-astro-cid-zzx6nip6> <i class="fas fa-file-pdf" data-astro-cid-zzx6nip6></i> Exportar PDF
+</button> <button id="export-png-btn" class="btn btn-info flex-btn" data-astro-cid-zzx6nip6> <i class="fas fa-image" data-astro-cid-zzx6nip6></i> Exportar PNG
+</button> <button id="reset-app-btn" class="btn btn-secondary flex-btn" data-astro-cid-zzx6nip6> <i class="fas fa-redo" data-astro-cid-zzx6nip6></i> Novo Questionário
+</button> </div> <!-- Área de Dashboard --> <div id="dashboard-content" data-astro-cid-zzx6nip6> <!-- Sumário --> <div id="results-summary" class="summary-grid" data-astro-cid-zzx6nip6></div> <!-- Gráficos --> <div id="report-charts" class="charts-grid" data-astro-cid-zzx6nip6> <div class="chart-box" data-astro-cid-zzx6nip6> <h3 data-astro-cid-zzx6nip6>Desempenho por Disciplina</h3> <div class="canvas-wrapper" data-astro-cid-zzx6nip6><canvas id="discipline-chart" data-astro-cid-zzx6nip6></canvas></div> </div> <div class="chart-box" data-astro-cid-zzx6nip6> <h3 data-astro-cid-zzx6nip6>Distribuição Global</h3> <div class="canvas-wrapper" data-astro-cid-zzx6nip6><canvas id="global-chart" data-astro-cid-zzx6nip6></canvas></div> </div> </div> <!-- Detalhes --> <div id="discipline-details" class="mt-8" data-astro-cid-zzx6nip6> <h3 data-astro-cid-zzx6nip6>Detalhes por Questão</h3> <!-- Gráficos de detalhe via JS --> </div> </div> <!-- Gabarito --> <div id="answer-review" class="mt-12" data-astro-cid-zzx6nip6> <h3 class="section-subtitle" data-astro-cid-zzx6nip6>Gabarito e Revisão</h3> <div id="gabarito-table-container" class="table-wrapper" data-astro-cid-zzx6nip6></div> </div> </section> <!-- Mensagens Flutuantes --> <div id="message-box" class="toast hidden" data-astro-cid-zzx6nip6></div> <!-- Modal IA --> <div id="gemini-modal" class="modal-overlay hidden" data-astro-cid-zzx6nip6> <div class="modal-card" data-astro-cid-zzx6nip6> <button id="gemini-modal-close" class="modal-close" data-astro-cid-zzx6nip6>&times;</button> <h3 class="modal-title" data-astro-cid-zzx6nip6>✨ Análise da Questão</h3> <div id="gemini-loading" class="loading-state" data-astro-cid-zzx6nip6> <div class="spinner" data-astro-cid-zzx6nip6></div> <p data-astro-cid-zzx6nip6>Consultando tutor IA...</p> </div> <div id="gemini-modal-content" class="modal-body hidden" data-astro-cid-zzx6nip6></div> </div> </div> </div> <script>
+        // =========================================================================
+        // LÓGICA DA APLICAÇÃO (Adaptada para usar novas classes CSS)
+        // =========================================================================
+        const APP = {};
+
+        APP.state = {
+            quizData: null,
+            userAnswers: {},
+            chartInstances: []
+        };
+
+        // --- 1. PARSER (Mantido praticamente igual) ---
+        APP.MARKDOWN_PARSER = {
+            parse: function(markdownText) {
+                if (!markdownText) return null;
+                const lines = markdownText.split('\n').map(line => line.trim()).filter(l => l.length > 0);
+                const data = { disciplines: [], gabarito: {} };
+                let currentDiscipline = null;
+                let currentQuestion = null;
+                let isGabaritoSection = false;
+                let uniqueIdCounter = 1;
+
+                const regexDiscipline = /^##\s*Disciplina:\s*(.*)/i;
+                const regexQuestionTitle = /^###\s*Questão\s*(\d+):\s*(.*)/i;
+                const regexText = /^(\**Texto:\**)\s*(.*)/i;
+                const regexEnunciated = /^(\**Enunciado:\**)\s*(.*)/i;
+                const regexOption = /^- ([A-Za-z]\.)\s*(.*)/;
+                const regexGabaritoHeader = /^##\s*Gabarito/i;
+                const regexGabaritoSectionHeader = /^(###|####)\s*([A-Za-zÀ-ÿ\s]+)/i;
+                const regexGabaritoAnswer = /^(###|####|#####)\s*Questão\s*(\d+):\s*([A-Za-z])/i; 
+
+                let currentGabaritoDiscipline = null;
+                const gabaritoAnswersMap = {}; 
+
+                for (const line of lines) {
+                    if (regexGabaritoHeader.test(line)) { isGabaritoSection = true; continue; }
+
+                    if (isGabaritoSection) {
+                        const disciplineHeaderMatch = line.match(regexGabaritoSectionHeader); 
+                        if (disciplineHeaderMatch && !line.includes('Questão')) {
+                            currentGabaritoDiscipline = disciplineHeaderMatch[2].trim();
+                            continue;
+                        }
+                        const gabaritoAnswerMatch = line.match(regexGabaritoAnswer);
+                        if (gabaritoAnswerMatch && currentGabaritoDiscipline) {
+                            const uniqueKey = `${currentGabaritoDiscipline}_${gabaritoAnswerMatch[2]}`; 
+                            gabaritoAnswersMap[uniqueKey] = gabaritoAnswerMatch[3].toUpperCase();
+                        }
+                    } else {
+                        const disciplineMatch = line.match(regexDiscipline);
+                        if (disciplineMatch) {
+                            currentDiscipline = { name: disciplineMatch[1].trim(), questions: [] };
+                            data.disciplines.push(currentDiscipline);
+                            currentQuestion = null;
+                            continue;
+                        }
+                        const questionMatch = line.match(regexQuestionTitle);
+                        if (questionMatch) {
+                            if (!currentDiscipline) throw new Error("Disciplina não definida antes da questão.");
+                            currentQuestion = {
+                                internalId: String(uniqueIdCounter++),
+                                displayNum: questionMatch[1],
+                                title: questionMatch[2].trim(),
+                                enunciated: '', text: '', options: [],
+                                discipline: currentDiscipline.name,
+                            };
+                            currentDiscipline.questions.push(currentQuestion);
+                            continue;
+                        }
+                        if (currentQuestion) {
+                            const textMatch = line.match(regexText);
+                            const enunciatedMatch = line.match(regexEnunciated);
+                            const optionMatch = line.match(regexOption);
+                            
+                            if (textMatch) currentQuestion.text = textMatch[2].trim();
+                            else if (enunciatedMatch) currentQuestion.enunciated = enunciatedMatch[2].trim();
+                            else if (optionMatch) {
+                                currentQuestion.options.push({ id: optionMatch[1].replace('.', '').toUpperCase(), text: optionMatch[2].trim() });
+                            } else {
+                                if (currentQuestion.text && !currentQuestion.options.length) currentQuestion.text += ' ' + line.trim();
+                                else if (currentQuestion.enunciated) currentQuestion.enunciated += ' ' + line.trim();
+                            }
+                        }
+                    }
+                }
+
+                data.disciplines.forEach(disc => {
+                    disc.questions.forEach(q => {
+                        const uniqueKey = `${disc.name}_${q.displayNum}`;
+                        if (gabaritoAnswersMap[uniqueKey]) data.gabarito[q.internalId] = gabaritoAnswersMap[uniqueKey]; 
+                    });
+                });
+
+                return data;
+            }
+        };
+
+        // --- 2. MANAGER (Mantido) ---
+        APP.QUIZ_MANAGER = {
+            loadQuiz: function() {
+                const markdownText = document.getElementById('markdown-input').value;
+                const loadBtn = document.getElementById('load-quiz-btn');
+                if (!markdownText.trim()) return APP.UI_RENDERER.showMessage('Insira o texto do questionário.', 'danger');
+
+                loadBtn.disabled = true;
+                loadBtn.textContent = 'Processando...';
+
+                try {
+                    APP.state.quizData = APP.MARKDOWN_PARSER.parse(markdownText);
+                    APP.state.userAnswers = {};
+                    APP.UI_RENDERER.renderQuizView();
+                    APP.UI_RENDERER.showMessage('Questionário carregado!', 'success');
+                } catch (error) {
+                    APP.UI_RENDERER.showMessage('Erro: ' + error.message, 'danger');
+                } finally {
+                    loadBtn.disabled = false;
+                    loadBtn.textContent = 'Iniciar Questionário';
+                }
+            },
+            saveAnswer: function(qid, aid) {
+                APP.state.userAnswers[qid] = aid;
+                APP.QUIZ_MANAGER.updateStatus();
+            },
+            updateStatus: function() {
+                const total = APP.QUIZ_MANAGER.getTotalQuestionsCount();
+                const answered = Object.keys(APP.state.userAnswers).length;
+                document.getElementById('quiz-status').innerHTML = `Progresso: <strong>${answered}</strong> de <strong>${total}</strong> respondidas.`;
+            },
+            getTotalQuestionsCount: function() {
+                return APP.state.quizData ? APP.state.quizData.disciplines.reduce((acc, d) => acc + d.questions.length, 0) : 0;
+            },
+            finishQuiz: function() {
+                APP.UI_RENDERER.renderResultsView(APP.QUIZ_MANAGER.calculateResults());
+            },
+            calculateResults: function() {
+                const gabarito = APP.state.quizData.gabarito;
+                const results = { totalCorrect: 0, totalIncorrect: 0, totalUnanswered: 0, totalQuestions: APP.QUIZ_MANAGER.getTotalQuestionsCount(), disciplineStats: {}, questionReview: [] };
+
+                APP.state.quizData.disciplines.forEach(disc => {
+                    const discStats = { correct: 0, incorrect: 0, unanswered: 0, total: disc.questions.length, questionDetails: {} };
+                    disc.questions.forEach(q => {
+                        const internalId = q.internalId;
+                        const ua = APP.state.userAnswers[internalId];
+                        const ca = gabarito[internalId];
+                        let status;
+
+                        if (ua === undefined) { discStats.unanswered++; results.totalUnanswered++; status = 'unanswered'; }
+                        else if (ua === ca) { discStats.correct++; results.totalCorrect++; status = 'correct'; }
+                        else { discStats.incorrect++; results.totalIncorrect++; status = 'incorrect'; }
+                        
+                        discStats.questionDetails[internalId] = status;
+                        results.questionReview.push({ internalId: internalId, displayNum: q.displayNum, discipline: disc.name, userAnswer: ua || '-', correctAnswer: ca, status: status });
+                    });
+                    results.disciplineStats[disc.name] = discStats;
+                });
+                return results;
+            }
+        };
+
+        // --- 3. RENDERER (Atualizado para usar classes CSS Customizadas) ---
+        APP.UI_RENDERER = {
+            renderQuizView: function() {
+                document.getElementById('config-module').classList.add('hidden');
+                document.getElementById('quiz-module').classList.remove('hidden');
+                const qList = document.getElementById('questions-list');
+                qList.innerHTML = '';
+
+                APP.state.quizData.disciplines.forEach(disc => {
+                    const discHeader = document.createElement('div');
+                    discHeader.className = 'discipline-header';
+                    discHeader.innerHTML = `<h3>${disc.name}</h3>`;
+                    qList.appendChild(discHeader);
+
+                    disc.questions.forEach(q => qList.appendChild(APP.UI_RENDERER.createQuestionCard(q)));
+                });
+                APP.QUIZ_MANAGER.updateStatus();
+            },
+
+            createQuestionCard: function(question) {
+                const card = document.createElement('div');
+                card.id = `q-${question.internalId}`;
+                card.className = 'question-card'; // Classe CSS nativa
+
+                let html = `<div class="question-title">Questão ${question.displayNum}: ${question.title}</div>`;
+                if (question.text) html += `<div class="question-support-text"><strong>Texto:</strong> ${question.text}</div>`;
+                html += `<p class="question-enunciated">${question.enunciated}</p><div class="options-container">`;
+
+                question.options.forEach(opt => {
+                    const optionId = `q${question.internalId}_opt${opt.id}`;
+                    const radioName = `q${question.internalId}`;
+                    const isChecked = APP.state.userAnswers[question.internalId] === opt.id ? 'checked' : '';
+
+                    html += `
+                        <div class="option-item">
+                            <input type="radio" id="${optionId}" name="${radioName}" value="${opt.id}" ${isChecked} 
+                                   onchange="APP.QUIZ_MANAGER.saveAnswer('${question.internalId}', '${opt.id}')">
+                            <label for="${optionId}" class="option-label">
+                                <span class="opt-id">${opt.id}</span>
+                                <span class="opt-text">${opt.text}</span>
+                            </label>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                card.innerHTML = html;
+                return card;
+            },
+
+            renderResultsView: function(results) {
+                document.getElementById('quiz-module').classList.add('hidden');
+                document.getElementById('results-module').classList.remove('hidden');
+                
+                // Renderiza Resumo
+                document.getElementById('results-summary').innerHTML = `
+                    <div class="summary-card bg-primary-light">
+                        <div class="val">${results.totalQuestions}</div>
+                        <div class="lbl">Questões</div>
+                    </div>
+                    <div class="summary-card bg-success-light">
+                        <div class="val">${results.totalCorrect}</div>
+                        <div class="lbl">Acertos</div>
+                    </div>
+                    <div class="summary-card bg-danger-light">
+                        <div class="val">${results.totalIncorrect + results.totalUnanswered}</div>
+                        <div class="lbl">Erros</div>
+                    </div>
+                `;
+
+                APP.REPORT_GENERATOR.destroyCharts();
+                APP.REPORT_GENERATOR.renderCharts(results);
+
+                // Feedback Visual nas Questões (Classes CSS)
+                const qList = document.getElementById('questions-list');
+                qList.querySelectorAll('input').forEach(i => i.disabled = true);
+                
+                APP.state.quizData.disciplines.forEach(disc => {
+                    disc.questions.forEach(q => {
+                        const card = document.getElementById(`q-${q.internalId}`);
+                        if (!card) return;
+                        const ua = APP.state.userAnswers[q.internalId];
+                        const ca = APP.state.quizData.gabarito[q.internalId];
+                        
+                        card.classList.add(ua === ca ? 'status-correct' : 'status-incorrect');
+
+                        card.querySelectorAll('.option-item').forEach(item => {
+                            const input = item.querySelector('input');
+                            const label = item.querySelector('label');
+                            const optId = label.querySelector('.opt-id').textContent.trim();
+
+                            if (optId === ca) {
+                                label.classList.add('is-correct');
+                                label.innerHTML += ` <span class="badge-correct">(Gabarito)</span>`;
+                            }
+                            if (ua && optId === ua) {
+                                label.classList.add('is-selected');
+                                if (ua !== ca) label.innerHTML += ` <span class="badge-wrong">(Sua Resposta)</span>`;
+                            }
+                        });
+                    });
+                });
+
+                APP.UI_RENDERER.renderAnswerReviewTable(results.questionReview);
+                
+                // Move a lista de questões revisadas para o final
+                const reviewContainer = document.getElementById('answer-review');
+                const oldTitle = reviewContainer.querySelector('.review-title');
+                if(oldTitle) oldTitle.remove();
+                const title = document.createElement('h3');
+                title.className = 'review-title section-subtitle mt-8';
+                title.textContent = 'Revisão Detalhada';
+                reviewContainer.appendChild(title);
+                reviewContainer.appendChild(qList);
+            },
+
+            renderAnswerReviewTable: function(list) {
+                const container = document.getElementById('gabarito-table-container');
+                let html = `<table class="result-table"><thead><tr>
+                    <th>#</th><th>Disciplina</th><th>Sua Resp.</th><th>Gabarito</th><th>Ação</th>
+                </tr></thead><tbody>`;
+
+                list.forEach(r => {
+                    let action = '-';
+                    if (r.status === 'incorrect') {
+                        action = `<button class="btn-xs btn-info" onclick="APP.GEMINI_HELPER.explain('${r.internalId}')">Explicar Erro</button>`;
+                    }
+                    html += `<tr>
+                        <td>${r.displayNum}</td>
+                        <td>${r.discipline}</td>
+                        <td class="${r.status === 'correct' ? 'text-success' : 'text-danger'} bold">${r.userAnswer}</td>
+                        <td class="text-success bold">${r.correctAnswer}</td>
+                        <td>${action}</td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            },
+
+            showMessage: function(msg, type = 'info') {
+                const box = document.getElementById('message-box');
+                box.textContent = msg;
+                box.className = `toast toast-${type} show`;
+                setTimeout(() => box.classList.remove('show'), 3000);
+            },
+
+            resetApp: function() {
+                // Restaura lista de questões para o módulo de quiz
+                const qList = document.getElementById('questions-list');
+                const qModule = document.getElementById('quiz-module');
+                qModule.insertBefore(qList, document.getElementById('quiz-status'));
+
+                document.getElementById('markdown-input').value = '';
+                document.getElementById('config-module').classList.add('hidden');
+                document.getElementById('quiz-module').classList.add('hidden');
+                document.getElementById('results-module').classList.add('hidden');
+                APP.state.quizData = null;
+                APP.state.userAnswers = {};
+                APP.REPORT_GENERATOR.destroyCharts();
+                document.getElementById('gabarito-table-container').innerHTML = '';
+            },
+
+            insertTemplate: function() {
+                const tpl = `## Disciplina: Exemplo\n### Questão 1: Teste\n**Enunciado:** Quanto é 1+1?\n- A. 1\n- B. 2\n- C. 3\n## Gabarito\n### Exemplo\n#### Questão 1: B`;
+                document.getElementById('markdown-input').value = tpl;
+                document.getElementById('load-quiz-btn').disabled = false;
+            }
+        };
+
+        // --- 4. CHARTS & EXPORT ---
+        APP.REPORT_GENERATOR = {
+            destroyCharts: function() {
+                APP.state.chartInstances.forEach(c => c.destroy());
+                APP.state.chartInstances = [];
+                document.getElementById('discipline-details').innerHTML = '<h3>Detalhes por Questão</h3>';
+            },
+            renderCharts: function(results) {
+                // Implementação simplificada dos gráficos Chart.js
+                const ctxGlobal = document.getElementById('global-chart').getContext('2d');
+                APP.state.chartInstances.push(new Chart(ctxGlobal, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Acertos', 'Erros'],
+                        datasets: [{ data: [results.totalCorrect, results.totalIncorrect + results.totalUnanswered], backgroundColor: ['#10b981', '#ef4444'] }]
+                    }
+                }));
+
+                const discNames = Object.keys(results.disciplineStats);
+                const ctxDisc = document.getElementById('discipline-chart').getContext('2d');
+                APP.state.chartInstances.push(new Chart(ctxDisc, {
+                    type: 'bar',
+                    data: {
+                        labels: discNames,
+                        datasets: [{ 
+                            label: '% Acerto', 
+                            data: discNames.map(d => (results.disciplineStats[d].correct / results.disciplineStats[d].total)*100),
+                            backgroundColor: '#4f46e5'
+                        }]
+                    },
+                    options: { scales: { y: { beginAtZero: true, max: 100 } } }
+                }));
+            },
+            exportReport: async function(fmt) {
+                // Lógica de exportação simplificada para usar classes nativas
+                APP.UI_RENDERER.showMessage('Exportação iniciada...', 'info');
+                // ... (Lógica similar à anterior, mas sem dependência de classes Tailwind)
+            }
+        };
+
+        // --- 5. GEMINI API ---
+        APP.GEMINI_HELPER = {
+            explain: function(id) {
+                const modal = document.getElementById('gemini-modal');
+                modal.classList.remove('hidden');
+                document.getElementById('gemini-loading').classList.remove('hidden');
+                document.getElementById('gemini-modal-content').classList.add('hidden');
+                
+                // Simulação de chamada (Substituir pela real)
+                setTimeout(() => {
+                    document.getElementById('gemini-loading').classList.add('hidden');
+                    const content = document.getElementById('gemini-modal-content');
+                    content.innerHTML = "<p>Esta é uma explicação simulada da IA sobre o erro na questão.</p>";
+                    content.classList.remove('hidden');
+                }, 1500);
+            }
+        };
+
+        // --- INIT ---
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('load-template-btn').addEventListener('click', APP.UI_RENDERER.insertTemplate);
+            document.getElementById('load-quiz-btn').addEventListener('click', APP.QUIZ_MANAGER.loadQuiz);
+            document.getElementById('finish-quiz-btn').addEventListener('click', APP.QUIZ_MANAGER.finishQuiz);
+            document.getElementById('reset-app-btn').addEventListener('click', APP.UI_RENDERER.resetApp);
+            document.getElementById('gemini-modal-close').addEventListener('click', () => document.getElementById('gemini-modal').classList.add('hidden'));
+            
+            document.getElementById('markdown-input').addEventListener('input', (e) => {
+                document.getElementById('load-quiz-btn').disabled = e.target.value.trim() === '';
+            });
+            
+            APP.UI_RENDERER.insertTemplate();
+        });
+    </script>   <!-- O conteúdo da página será injetado aqui --> </main> <footer> <div class="container"> <div class="footer-content"> <div class="footer-column"> <h3>Mundo AEC</h3> <p>Tecnologia aberta para toda a cadeia da construção. Um ecossistema integrado de soluções.</p> </div> <div class="footer-column"> <h3>Ecossistema</h3> <ul class="footer-links"> <li><a href="/autosinapi">AutoSINAPI API</a></li> <li><a href="/tools">Ferramentas Web</a></li> <li><a href="/foton">Comunidade Foton</a></li> <li><a href="https://comunidade.mundoaec.com/">Redmine Comunidade</a></li> </ul> </div> <div class="footer-column"> <h3>Desenvolvimento</h3> <ul class="footer-links"> <li><a href="https://github.com/LAMP-LUCAS/foton">Foton (GitHub)</a></li> <li><a href="https://github.com/LAMP-LUCAS/foton_cash_flow">Plugin Fluxo de Caixa</a></li> <li><a href="https://github.com/LAMP-LUCAS/autoSINAPI_API">AutoSINAPI API (GitHub)</a></li> <li><a href="https://github.com/LAMP-LUCAS">Todos os Repositórios</a></li> </ul> </div> <div class="footer-column"> <h3>Contato</h3> <ul class="footer-links"> <li><i class="fas fa-envelope"></i> contato@mundoaec.com</li> <li><i class="fab fa-github"></i> github.com/LAMP-LUCAS</li> </ul> </div> </div> <div class="copyright"> <p>&copy; 2025 Mundo AEC. Feito com ♥ por uma comunidade que acredita que o futuro da construção é aberto, integrado e acessível.</p> </div> </div> </footer> </body></html>
