@@ -1,14 +1,18 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import '../styles/autosinapi.css';
+import '../styles/global.css';
+
+const title = "Construa o futuro da AEC com a Comunidade Foton";
+const description = "Colaboração e conhecimento para acelerar a transformação digital da AEC. Descubra plugins, roadmap e como contribuir.";
 ---
 
-<Layout title="AutoSINAPI - API de Dados do SINAPI" description="Acesse dados atualizados do SINAPI via API para orçamentos precisos e automação. Integre em minutos, atualize em segundos.">
+<Layout title={title} description={description}>
     <!-- Hero Section -->
     <section class="hero">
         <div class="container">
-            <h1>Construa o futuro da AEC com a Comunidade Foton</h1>
-            <p>Um ecossistema colaborativo open source para revolucionar a construção civil brasileira.</p>
+            <h1>Construa o futuro da AEC com o ecossistema Foton</h1>
+            <p>Colaborativo, open source, gratuito
+            <br> pronto para revolucionar a construção civil brasileira.</p>
             <div class="hero-btns">
                 <a href="https://comunidade.mundoaec.com/projects/foton" class="btn">Participar</a>
                 <a href="https://github.com/LAMP-LUCAS/foton" class="btn btn-outline">Contribuir com código</a>
@@ -68,7 +72,7 @@ import '../styles/autosinapi.css';
     <section id="pilares" class="problem">
         <div class="container">
             <div class="section-header">
-                <h2>Nossa Solução: Os Pilares da Comunidade Foton</h2>
+                <h2>Nossa Solução: Os Pilares da <a href="comunidade">Comunidade</a> Foton</h2>
                 <p>Construímos um ecossistema robusto sobre valores que garantem inovação, colaboração e sustentabilidade para a AEC.</p>
             </div>
             <div class="pillars">
@@ -109,7 +113,7 @@ import '../styles/autosinapi.css';
                     </ul>
                     <div class="hero-btns">
                         <a href="https://github.com/LAMP-LUCAS/redmine_cash_flow_plugin" class="btn">Baixar no GitHub</a>
-                        <a href="#" class="btn btn-outline">Ver Demonstração</a>
+                        <a href="https://github.com/LAMP-LUCAS/redmine_cash_flow_plugin" class="btn btn-outline">Ver Demonstração</a>
                     </div>
                 </div>
                 <div class="ecosystem-image" style="text-align: center;">

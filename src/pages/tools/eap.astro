@@ -1,7 +1,15 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+
+export const title = "Gerenciador de EAP e Orçamento";
+export const description = "Ferramenta para criar e gerenciar a Estrutura Analítica do Projeto (EAP) com custos, relatórios e exportação de BOM.";
+export const status = "Estável";
+export const docsLink = "#"; // Placeholder, pois não existe documentação dedicada ainda
+export const repoLink = "https://github.com/LAMP-LUCAS/foton"; // Repositório mais geral por enquanto
+export const aecJourney = ["Escritório", "Canteiro"];
 ---
-<Layout title="Gerenciador de EAP e Orçamento" description="Ferramenta para criar e gerenciar a Estrutura Analítica do Projeto (EAP) com custos, relatórios e exportação de BOM.">
+
+<Layout title={title} description={description}>
 
     <div class="container-principal">
         <section class="header-pagina">

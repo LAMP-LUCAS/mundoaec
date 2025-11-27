@@ -3,36 +3,41 @@
 import Layout from '../../layouts/Layout.astro';
 
 // 1. Busque todos os arquivos .astro dentro desta pasta
-// A função Astro.glob() retorna um array de objetos para cada arquivo encontrado.
-// O argumento `**/` faz a busca recursiva, o `*.astro` busca todos os arquivos .astro.
 const allTools = await Astro.glob('./*.astro');
 
-// 2. Filtre o arquivo 'index.astro' para não listá-lo
-const listedTools = allTools.filter(tool => !tool.file.includes('index.astro'));
+// 2. Filtre o arquivo 'index.astro' e garanta que tenha título definido
+// Em arquivos .astro, exports nomeados como 'export const title' ficam disponíveis diretamente no objeto do módulo, não em 'frontmatter'.
+const listedTools = allTools.filter(tool => 
+  !tool.file.includes('index.astro') && 
+  tool.title
+);
 
-// 3. Opcional: Ordene as ferramentas por título ou nome de arquivo
-listedTools.sort((a, b) => a.url.localeCompare(b.url));
-
-// Função para formatar o nome do link, ex: /tools/calculadora -> Calculadora
-function formatLinkName(url) {
-  // Pega a última parte da URL (ex: calculadora.astro)
-  const parts = url.split('/');
-  const fileName = parts[parts.length - 1].replace('.astro', '');
-  
-  // Converte a primeira letra para maiúscula
-  return fileName.charAt(0).toUpperCase() + fileName.slice(1);
-}
+// 3. Ordene as ferramentas por título
+listedTools.sort((a, b) => a.title.localeCompare(b.title));
 ---
-<Layout title="Ferramentas">
+<Layout title="Ferramentas" description="Soluções open source para otimizar seu dia a dia no escritório e no canteiro de obras. Descubra nossas calculadoras, gerenciadores e mais.">
   <div class="container mx-auto px-4 py-8">
     <h1 class="text-4xl font-bold text-center mb-12">Nossas Ferramentas</h1>
     
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {listedTools.map(tool => (
-        <a href={tool.url} class="tool-card">
-          <h2>{formatLinkName(tool.url)}</h2>
-          <p>Explore a ferramenta {formatLinkName(tool.url.toLowerCase())} e simplifique suas tarefas de construção.</p>
-        </a>
+        <div class="tool-card">
+          <h2>{tool.title}</h2>
+          <p>{tool.description}</p>
+          <div class="tool-meta">
+            <span class="status">{tool.status}</span>
+            <span class="aec-journey">
+                {tool.aecJourney && tool.aecJourney.map(journey => (
+                    <span class="tag">{journey}</span>
+                ))}
+            </span>
+          </div>
+          <div class="tool-actions">
+            <a href={tool.url} class="btn btn-primary">Acessar</a>
+            {tool.docsLink && tool.docsLink !== '#' && <a href={tool.docsLink} class="btn btn-secondary">Documentação</a>}
+            {tool.repoLink && tool.repoLink !== '#' && <a href={tool.repoLink} class="btn btn-secondary">Repositório</a>}
+          </div>
+        </div>
       ))}
     </div>
   </div>
@@ -93,14 +98,74 @@ h1 {
   font-size: 1rem;
   color: #4a5568;
   line-height: 1.5;
+  flex-grow: 1; /* Permite que a descrição ocupe o espaço disponível */
 }
 
-/* Ícone opcional */
-.tool-card::before {
-  content: "🛠️";
-  font-size: 1.75rem;
-  margin-bottom: 0.75rem;
-  display: block;
+/* Meta information (status, aec-journey) */
+.tool-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
 }
 
+.tool-meta .status {
+    background-color: #e0e7ff; /* Light blue background */
+    color: #4338ca; /* Darker blue text */
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px; /* Pill shape */
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.tool-meta .aec-journey .tag {
+    background-color: #d1fae5; /* Light green background */
+    color: #047857; /* Darker green text */
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* Botões de ação */
+.tool-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+.tool-actions .btn {
+    flex: 1;
+    min-width: fit-content;
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.tool-actions .btn-primary {
+    background-color: #3b82f6; /* Blue-500 */
+    color: white;
+    border: 1px solid #3b82f6;
+}
+
+.tool-actions .btn-primary:hover {
+    background-color: #2563eb; /* Blue-600 */
+}
+
+.tool-actions .btn-secondary {
+    background-color: white;
+    color: #3b82f6;
+    border: 1px solid #3b82f6;
+}
+
+.tool-actions .btn-secondary:hover {
+    background-color: #eff6ff; /* Blue-50 */
+}
 </style>

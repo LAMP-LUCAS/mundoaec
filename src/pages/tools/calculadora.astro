@@ -1,8 +1,15 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+
+export const title = "Calculadora de Gasto de Energia";
+export const description = "Estime o custo mensal e visualize o impacto de cada aparelho.";
+export const status = "Estável";
+export const docsLink = "#"; // Placeholder, pois não existe documentação dedicada ainda
+export const repoLink = "https://github.com/LAMP-LUCAS/foton"; // Repositório mais geral por enquanto
+export const aecJourney = ["Escritório", "Canteiro"];
 ---
 
-<Layout title="Calculadora de Gasto de Energia - Mundo AEC">
+<Layout title={title} description={description}>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
